@@ -1,0 +1,19 @@
+{
+  "name": "Picon Counter",
+  "short_name": "Picon",
+  "description": "Compteur personnel offline pour Picon-bière.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#130a0e",
+  "theme_color": "#130a0e",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

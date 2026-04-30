@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#130a0e" />
+    <title>Picon Counter</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#today" aria-label="Picon Counter">
+          <span class="brand-mark" aria-hidden="true">PC</span>
+          <span>
+            <strong>Picon Counter</strong>
+            <small id="todayDate">Aujourd'hui</small>
+          </span>
+        </a>
+        <button class="icon-button install-button" id="installButton" type="button" hidden aria-label="Installer">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v12m0 0 5-5m-5 5-5-5M5 20h14" />
+          </svg>
+        </button>
+      </header>
+
+      <section class="hero" aria-labelledby="counterTitle">
+        <div class="counter-stack">
+          <p class="kicker">Compteur quotidien</p>
+          <h1 id="counterTitle"><span id="todayPicons">0</span> <span id="piconLabel">Picon</span></h1>
+          <p class="counter-subline"><span id="standardLine">0 verre standard</span> · <span id="selectedPiconLine">Demi rétro</span></p>
+
+          <div class="hero-actions" aria-label="Actions compteur">
+            <button class="icon-button ghost" id="removeButton" type="button" aria-label="Retirer le dernier Picon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14" />
+              </svg>
+            </button>
+            <button class="add-button" id="addButton" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              <span>Picon</span>
+            </button>
+            <button class="icon-button ghost" id="waterButton" type="button" aria-label="Marquer un verre d'eau">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11Z" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="format-strip" aria-label="Choix du Picon">
+            <button class="preset active" type="button" data-preset="demi">Demi</button>
+            <button class="preset" type="button" data-preset="pinte">Pinte</button>
+            <button class="preset" type="button" data-preset="leger">Léger</button>
+            <button class="preset" type="button" data-preset="schwartz">Shwartz</button>
+          </div>
+
+          <div class="meter-row">
+            <span>Jour</span>
+            <div class="meter" aria-hidden="true"><span id="dailyMeter"></span></div>
+            <strong id="dailyMeterLabel">0 / 2</strong>
+          </div>
+          <div class="meter-row">
+            <span>Semaine</span>
+            <div class="meter weekly" aria-hidden="true"><span id="weeklyMeter"></span></div>
+            <strong id="weeklyMeterLabel">0 / 10</strong>
+          </div>
+        </div>
+
+        <div class="glass-stage" aria-label="Verre de Picon-bière animé">
+          <div class="orbit orbit-one" aria-hidden="true"></div>
+          <div class="orbit orbit-two" aria-hidden="true"></div>
+          <div class="pour-stream" id="pourStream" aria-hidden="true"></div>
+          <div class="glass" id="animatedGlass">
+            <div class="glass-shine" aria-hidden="true"></div>
+            <div class="bubbles" id="bubbleLayer" aria-hidden="true"></div>
+            <div class="liquid" aria-hidden="true">
+              <div class="wave wave-front"></div>
+              <div class="wave wave-back"></div>
+            </div>
+            <div class="foam" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="glass-shadow" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="status-band" aria-live="polite">
+        <div>
+          <span class="status-dot" id="statusDot"></span>
+          <strong id="statusTitle">Journée à zéro</strong>
+        </div>
+        <p id="statusText">Repère français : maximum 2 verres standard par jour, et pas tous les jours.</p>
+      </section>
+
+      <nav class="tabs" aria-label="Navigation">
+        <button class="tab active" type="button" data-view="today">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4M16 2v4M4 10h16M5 4h14a1 1 0 0 1 1 1v15H4V5a1 1 0 0 1 1-1Z" /></svg>
+          <span>Jour</span>
+        </button>
+        <button class="tab" type="button" data-view="dashboard">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4zM14 20h6V4h-6zM4 20h6v-3H4z" /></svg>
+          <span>Dash</span>
+        </button>
+        <button class="tab" type="button" data-view="week">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 16V9M13 16V6M18 16v-4" /></svg>
+          <span>Semaine</span>
+        </button>
+        <button class="tab" type="button" data-view="log">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" /></svg>
+          <span>Journal</span>
+        </button>
+        <button class="tab" type="button" data-view="recipe">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10M9 3v5l-4 9a3 3 0 0 0 2.7 4h8.6a3 3 0 0 0 2.7-4l-4-9V3M8 14h8" /></svg>
+          <span>Recette</span>
+        </button>
+      </nav>
+
+      <section class="view active" id="todayView">
+        <div class="compact-grid">
+          <article class="panel stat-panel">
+            <span>Verres standard</span>
+            <strong id="todayStandards">0</strong>
+            <small id="perPiconLine">1 Picon = 1,4 verre standard</small>
+          </article>
+          <article class="panel stat-panel">
+            <span>Jours sans alcool</span>
+            <strong id="dryDays">0/2</strong>
+            <small>Cette semaine</small>
+          </article>
+          <article class="panel stat-panel">
+            <span>Hydratation</span>
+            <strong id="waterCount">0</strong>
+            <small id="waterLine">Verres d'eau notés</small>
+          </article>
+        </div>
+
+        <article class="panel zero-panel">
+          <div>
+            <span class="panel-label">Situations zéro</span>
+            <h2>Objectif du jour</h2>
+          </div>
+          <div class="toggle-list">
+            <label class="switch-row">
+              <input type="checkbox" id="driveToggle" />
+              <span>Conduite prévue</span>
+            </label>
+            <label class="switch-row">
+              <input type="checkbox" id="pauseToggle" />
+              <span>Journée pause</span>
+            </label>
+          </div>
+        </article>
+
+        <article class="panel rhythm-panel">
+          <div>
+            <span class="panel-label">Rythme</span>
+            <h2 id="rhythmTitle">Rien au compteur</h2>
+          </div>
+          <p id="rhythmText">La journée compte comme pause tant qu'aucun Picon-bière n'est ajouté.</p>
+        </article>
+      </section>
+
+      <section class="view" id="dashboardView">
+        <article class="panel dashboard-hero-panel">
+          <div>
+            <span class="panel-label">Dashboard néon</span>
+            <h2 id="dashboardInsightTitle">Radar semaine</h2>
+            <p id="dashboardInsight">Aucune donnée récente, le compteur attend le premier Picon-bière.</p>
+          </div>
+          <div class="gauge" id="dashboardGauge" aria-label="Jauge hebdomadaire">
+            <span id="dashboardGaugeLabel">0%</span>
+          </div>
+        </article>
+
+        <div class="compact-grid two">
+          <article class="panel stat-panel">
+            <span>Moyenne 14 jours</span>
+            <strong id="dashboardAverage">0,0</strong>
+            <small>Verres standard / jour</small>
+          </article>
+          <article class="panel stat-panel">
+            <span>Série pause</span>
+            <strong id="dashboardStreak">0</strong>
+            <small>Jours consécutifs à zéro</small>
+          </article>
+          <article class="panel stat-panel">
+            <span>Pic récent</span>
+            <strong id="dashboardPeak">0,0</strong>
+            <small id="dashboardPeakLabel">Aucun jour</small>
+          </article>
+          <article class="panel stat-panel">
+            <span>Rythme eau</span>
+            <strong id="dashboardPace">0%</strong>
+            <small>Picons couverts par un verre d'eau</small>
+          </article>
+        </div>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="panel-label">Courbe 14 jours</span>
+              <h2>Verres standard</h2>
+            </div>
+            <span class="chart-limit">Repère 2/j</span>
+          </div>
+          <svg class="trend-chart" id="dashboardTrendSvg" viewBox="0 0 320 150" role="img" aria-label="Courbe des 14 derniers jours"></svg>
+          <div class="chart-labels" id="dashboardTrendLabels"></div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="panel-label">Répartition</span>
+              <h2>Formats Picon</h2>
+            </div>
+          </div>
+          <div class="type-bars" id="dashboardTypes"></div>
+        </article>
+      </section>
+
+      <section class="view" id="weekView">
+        <article class="panel week-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="panel-label">Semaine en cours</span>
+              <h2 id="weekRange">Lundi - dimanche</h2>
+            </div>
+            <strong id="weekTotal">0</strong>
+          </div>
+          <div class="week-bars" id="weekBars" aria-label="Consommation par jour"></div>
+        </article>
+
+        <div class="compact-grid two">
+          <article class="panel stat-panel">
+            <span>Repère semaine</span>
+            <strong id="weeklyStatus">0/10</strong>
+            <small>Verres standard</small>
+          </article>
+          <article class="panel stat-panel">
+            <span>Pause</span>
+            <strong id="weeklyPause">0 jour</strong>
+            <small>Objectif : au moins 2</small>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="logView">
+        <article class="panel log-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="panel-label">Historique</span>
+              <h2>Derniers jours</h2>
+            </div>
+            <button class="text-button danger" id="clearTodayButton" type="button">Effacer jour</button>
+          </div>
+          <div class="log-list" id="logList"></div>
+        </article>
+
+        <article class="panel data-panel">
+          <div>
+            <span class="panel-label">Données locales</span>
+            <h2>Sauvegarde</h2>
+          </div>
+          <div class="data-actions">
+            <button class="text-button" id="exportButton" type="button">Exporter</button>
+            <label class="text-button file-button">
+              Importer
+              <input type="file" id="importInput" accept="application/json" />
+            </label>
+            <button class="text-button danger" id="resetButton" type="button">Tout vider</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="view" id="recipeView">
+        <article class="panel recipe-panel">
+          <div>
+            <span class="panel-label">Picon-bière uniquement</span>
+            <h2>Format du verre</h2>
+          </div>
+          <div class="preset-row">
+            <button class="preset active" type="button" data-preset="demi">Demi</button>
+            <button class="preset" type="button" data-preset="pinte">Pinte</button>
+            <button class="preset" type="button" data-preset="leger">Léger</button>
+            <button class="preset" type="button" data-preset="schwartz">Shwartz</button>
+          </div>
+
+          <form class="recipe-form" id="recipeForm">
+            <label>
+              Bière ml
+              <input id="beerMl" name="beerMl" type="number" min="50" max="1000" step="5" inputmode="decimal" />
+            </label>
+            <label>
+              Bière %
+              <input id="beerAbv" name="beerAbv" type="number" min="0" max="20" step="0.1" inputmode="decimal" />
+            </label>
+            <label>
+              Picon ml
+              <input id="piconMl" name="piconMl" type="number" min="0" max="120" step="1" inputmode="decimal" />
+            </label>
+            <label>
+              Picon %
+              <input id="piconAbv" name="piconAbv" type="number" min="0" max="45" step="0.1" inputmode="decimal" />
+            </label>
+          </form>
+
+          <div class="recipe-result">
+            <span id="recipeGrams">14,1 g d'alcool pur</span>
+            <strong id="recipeStandards">1,4 verre standard</strong>
+          </div>
+        </article>
+
+        <article class="panel source-panel">
+          <span class="panel-label">Repères français</span>
+          <p>Un verre standard contient 10 g d'alcool pur. Le repère adulte est de 10 verres standard par semaine, 2 par jour maximum, avec des jours sans alcool.</p>
+        </article>
+      </section>
+    </main>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
