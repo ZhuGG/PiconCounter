@@ -128,13 +128,6 @@ button { cursor: pointer; }
   box-shadow: 0 18px 40px rgba(255, 154, 36, 0.28), 0 0 28px rgba(140, 255, 208, 0.16);
   transform: rotate(-3deg);
 }
-.brand-mark::before {
-  content: "✦";
-  color: rgba(31, 19, 7, 0.55);
-  font-size: 1.15rem;
-  transform: translateY(-1px);
-}
-.brand-mark { font-size: 0; }
 
 .brand strong,
 .brand small {
@@ -381,7 +374,7 @@ h2 {
   animation: spin 30s linear infinite;
 }
 
-.nouveau-arch {
+.stage-arch {
   position: absolute;
   width: min(70vw, 310px);
   height: min(92vw, 370px);
@@ -391,8 +384,8 @@ h2 {
   box-shadow: inset 0 0 0 10px rgba(117, 213, 157, 0.04), 0 0 34px rgba(246, 206, 114, 0.1);
   z-index: 0;
 }
-.nouveau-arch::before,
-.nouveau-arch::after {
+.stage-arch::before,
+.stage-arch::after {
   position: absolute;
   top: 21%;
   width: 52px;
@@ -402,9 +395,9 @@ h2 {
   border-width: 2px 0 0 2px;
   border-radius: 100% 0 0;
 }
-.nouveau-arch::before { left: 24px; transform: rotate(-24deg); }
-.nouveau-arch::after { right: 24px; transform: scaleX(-1) rotate(-24deg); }
-.vine {
+.stage-arch::before { left: 24px; transform: rotate(-24deg); }
+.stage-arch::after { right: 24px; transform: scaleX(-1) rotate(-24deg); }
+.side-line {
   position: absolute;
   top: 82px;
   width: 46px;
@@ -413,9 +406,9 @@ h2 {
   border-radius: 50%;
   z-index: 1;
 }
-.vine-left { left: 16px; transform: rotate(8deg); }
-.vine-right { right: 16px; transform: scaleX(-1) rotate(8deg); }
-.vine span {
+.side-line-left { left: 16px; transform: rotate(8deg); }
+.side-line-right { right: 16px; transform: scaleX(-1) rotate(8deg); }
+.side-line span {
   position: absolute;
   left: -5px;
   width: 26px;
@@ -425,9 +418,9 @@ h2 {
   background: rgba(117, 213, 157, 0.1);
   transform: rotate(-28deg);
 }
-.vine span:nth-child(1) { top: 28px; }
-.vine span:nth-child(2) { top: 94px; left: 7px; transform: scaleX(-1) rotate(-28deg); }
-.vine span:nth-child(3) { top: 154px; }
+.side-line span:nth-child(1) { top: 28px; }
+.side-line span:nth-child(2) { top: 94px; left: 7px; transform: scaleX(-1) rotate(-28deg); }
+.side-line span:nth-child(3) { top: 154px; }
 
 .pour-stream {
   position: absolute;
@@ -699,7 +692,7 @@ h2 {
   border-radius: 50%;
   background: radial-gradient(circle, rgba(117, 213, 157, 0.08), transparent 62%);
 }
-.week-rose {
+.week-markers {
   position: relative;
   width: 178px;
   height: 178px;
@@ -709,16 +702,16 @@ h2 {
     radial-gradient(circle, rgba(255, 248, 231, 0.16) 0 12%, transparent 13%),
     radial-gradient(circle, rgba(13, 9, 5, 0.58) 0 31%, transparent 32%);
 }
-.week-rose::before,
-.week-rose::after {
+.week-markers::before,
+.week-markers::after {
   position: absolute;
   inset: 30px;
   content: "";
   border: 1px solid rgba(246, 206, 114, 0.24);
   border-radius: 50%;
 }
-.week-rose::after { inset: 58px; border-color: rgba(117, 213, 157, 0.26); }
-.rose-petal {
+.week-markers::after { inset: 58px; border-color: rgba(117, 213, 157, 0.26); }
+.day-marker {
   --intensity: 0;
   position: absolute;
   top: 9px;
@@ -735,7 +728,7 @@ h2 {
   transform: translateX(-50%) rotate(var(--angle)) translateY(-2px);
   transform-origin: 50% 80px;
 }
-.rose-petal.today { outline: 2px solid rgba(117, 213, 157, 0.7); outline-offset: 3px; }
+.day-marker.today { outline: 2px solid rgba(117, 213, 157, 0.7); outline-offset: 3px; }
 .visual-caption {
   position: relative;
   z-index: 1;
@@ -788,10 +781,11 @@ h2 {
 .recipe-result strong { color: var(--mint); font-size: 1.45rem; }
 .empty-state { margin: 0; color: var(--muted); }
 
-/* Intensité et ornements art nouveau */
+/* États d'alerte et transitions */
 body {
   --intensity: 0;
-  --pulse-speed: calc(7s - min(var(--intensity), 1) * 3s);
+  --over-limit: 0;
+  --pulse-speed: calc(7s - min(var(--intensity), 1) * 3.4s - var(--over-limit) * 2s);
 }
 
 body.threshold-near::after,
@@ -801,11 +795,13 @@ body.threshold-reached::after {
 
 body.threshold-reached {
   background:
-    radial-gradient(circle at 18% 8%, rgba(246, 206, 114, 0.32), transparent 28rem),
-    radial-gradient(circle at 86% 2%, rgba(117, 213, 157, 0.18), transparent 24rem),
-    radial-gradient(circle at 72% 70%, rgba(214, 75, 85, 0.22), transparent 28rem),
-    linear-gradient(145deg, #0d0905 0%, #211407 38%, #40140c 100%);
+    radial-gradient(circle at 18% 8%, rgba(246, 206, 114, 0.38), transparent 28rem),
+    radial-gradient(circle at 86% 2%, rgba(117, 213, 157, 0.2), transparent 24rem),
+    radial-gradient(circle at 72% 70%, rgba(214, 75, 85, 0.3), transparent 28rem),
+    linear-gradient(145deg, #0d0905 0%, #211407 34%, #4a140d 100%);
 }
+body.threshold-reached::before { animation-duration: calc(13s - var(--over-limit) * 5s); }
+body.threshold-burst::after { animation: floorFlash 1.2s ease-out; }
 
 .hero {
   box-shadow:
@@ -816,23 +812,27 @@ body.threshold-reached {
 
 .drink-added .hero { animation: heroToast 980ms cubic-bezier(0.18, 0.9, 0.22, 1.08); }
 .drink-added #todayPicons { animation: numberBurst 980ms cubic-bezier(0.18, 0.9, 0.22, 1.08); }
+.threshold-reached .hero { animation: warningGlow calc(2.6s - var(--over-limit) * 1s) ease-in-out infinite; }
+.threshold-burst .hero { animation: thresholdKick 1.2s cubic-bezier(0.16, 1, 0.3, 1), warningGlow 2.2s ease-in-out infinite; }
+.threshold-burst #todayPicons { animation: numberBurst 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
 
 .orbit { animation-duration: var(--pulse-speed); }
 .week-aura {
-  opacity: calc(0.14 + min(var(--intensity), 1) * 0.24);
-  filter: blur(calc(12px - min(var(--intensity), 1) * 3px)) saturate(calc(1 + var(--intensity) * 0.55));
+  opacity: calc(0.14 + min(var(--intensity), 1) * 0.24 + var(--over-limit) * 0.2);
+  filter: blur(calc(12px - min(var(--intensity), 1) * 3px)) saturate(calc(1 + var(--intensity) * 0.7));
 }
+.threshold-reached .orbit { opacity: calc(0.38 + var(--over-limit) * 0.34); border-color: rgba(214, 75, 85, 0.34); }
 
-.nouveau-arch {
+.stage-arch {
   box-shadow:
     inset 0 0 0 10px rgba(117, 213, 157, calc(0.04 + min(var(--intensity), 1) * 0.08)),
     0 0 calc(34px + var(--intensity) * 34px) rgba(246, 206, 114, calc(0.1 + min(var(--intensity), 1) * 0.18));
   animation: archBreath 5.8s ease-in-out infinite;
 }
 
-.vine span { animation: leafFlutter 3.8s ease-in-out infinite; }
-.vine span:nth-child(2) { animation-delay: -1.1s; }
-.vine span:nth-child(3) { animation-delay: -2s; }
+.side-line span { animation: linePulse 3.8s ease-in-out infinite; }
+.side-line span:nth-child(2) { animation-delay: -1.1s; }
+.side-line span:nth-child(3) { animation-delay: -2s; }
 
 .glass {
   animation-duration: calc(5.2s - min(var(--intensity), 1) * 2s);
@@ -842,8 +842,13 @@ body.threshold-reached {
     0 0 calc(18px + var(--intensity) * 44px) rgba(255, 155, 36, calc(0.12 + min(var(--intensity), 1) * 0.28));
 }
 
-.threshold-reached .glass { animation: glassHover 2.2s ease-in-out infinite, warningTremble 540ms ease-in-out infinite; }
-.threshold-reached .meter span { background: linear-gradient(90deg, var(--amber-2), var(--raspberry), var(--danger)); }
+.threshold-reached .glass { animation: glassWarning calc(1.45s - var(--over-limit) * 0.45s) ease-in-out infinite; }
+.threshold-burst .glass { animation: glassKick 1.15s cubic-bezier(0.16, 1, 0.3, 1), glassWarning 1.45s ease-in-out infinite; }
+.threshold-reached .liquid { animation-duration: calc(2s - var(--over-limit) * 0.5s); filter: saturate(1.32) brightness(1.08); }
+.threshold-reached .wave { animation-duration: calc(2.8s - var(--over-limit) * 0.8s); }
+.threshold-reached .wave-back { animation-duration: calc(3.4s - var(--over-limit) * 0.9s); }
+.threshold-reached .bubble { animation-duration: calc(var(--duration) * 0.58); border-color: rgba(255, 246, 205, 0.95); }
+.threshold-reached .meter span { background: linear-gradient(90deg, var(--amber-2), var(--raspberry), var(--danger)); box-shadow: 0 0 18px rgba(214, 75, 85, 0.34); }
 
 .threshold-alert {
   position: absolute;
@@ -869,7 +874,7 @@ body.threshold-reached {
 .threshold-alert span { color: #ffe6cb; font-size: 0.8rem; font-weight: 850; line-height: 1.25; }
 .threshold-alert.active { animation: thresholdToast 3.8s ease-in-out; }
 
-.nouveau-panel,
+.framed-panel,
 .dashboard-hero-panel,
 .chart-panel,
 .week-panel,
@@ -880,7 +885,7 @@ body.threshold-reached {
   position: relative;
   overflow: hidden;
 }
-.nouveau-panel::before,
+.framed-panel::before,
 .dashboard-hero-panel::before,
 .chart-panel::before,
 .week-panel::before,
@@ -895,7 +900,7 @@ body.threshold-reached {
   border-radius: inherit;
   pointer-events: none;
 }
-.nouveau-panel::after,
+.framed-panel::after,
 .dashboard-hero-panel::after,
 .chart-panel::after,
 .week-panel::after,
@@ -912,12 +917,12 @@ body.threshold-reached {
   border: 1px solid rgba(117, 213, 157, 0.18);
   border-radius: 50% 50% 8px 50%;
   background: radial-gradient(circle, rgba(117, 213, 157, 0.1), transparent 62%);
-  animation: ornamentDrift 8s ease-in-out infinite;
+  animation: frameDrift 8s ease-in-out infinite;
   pointer-events: none;
 }
 .compact-heading { margin-bottom: 10px; }
-.ornament-badge,
-.pulse-medallion {
+.panel-badge,
+.pulse-badge {
   display: inline-grid;
   width: 42px;
   height: 42px;
@@ -928,14 +933,14 @@ body.threshold-reached {
   background: linear-gradient(135deg, var(--mint), var(--amber-2));
   box-shadow: 0 0 18px rgba(246, 206, 114, 0.22);
 }
-.pulse-medallion::before {
+.pulse-badge::before {
   width: 18px;
   height: 18px;
   content: "";
   border-radius: 100% 0 100% 0;
   background: var(--amber-2);
   transform: rotate(45deg);
-  animation: medallionPulse 1.8s ease-in-out infinite;
+  animation: badgePulse 1.8s ease-in-out infinite;
 }
 
 .stat-panel,
@@ -952,12 +957,12 @@ body.threshold-reached {
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18), 0 0 20px rgba(246, 206, 114, 0.08);
 }
 
-.week-rose { animation: roseTurn 34s linear infinite; }
-.rose-petal {
-  animation: petalBreathe calc(3.8s - min(var(--intensity), 1) * 1.2s) ease-in-out infinite;
-  animation-delay: var(--petal-delay, 0s);
+.week-markers { animation: markersTurn 34s linear infinite; }
+.day-marker {
+  animation: markerBreathe calc(3.8s - min(var(--intensity), 1) * 1.2s) ease-in-out infinite;
+  animation-delay: var(--marker-delay, 0s);
 }
-.week-rose::before { box-shadow: 0 0 calc(18px + var(--intensity) * 22px) rgba(246, 206, 114, calc(0.15 + min(var(--intensity), 1) * 0.2)); }
+.week-markers::before { box-shadow: 0 0 calc(18px + var(--intensity) * 22px) rgba(246, 206, 114, calc(0.15 + min(var(--intensity), 1) * 0.2)); }
 
 .day-bar.today .bar-track { animation: todayGlow 2.2s ease-in-out infinite; }
 .bar-fill::after,
@@ -989,15 +994,19 @@ body.threshold-reached {
 }
 
 @keyframes heroToast { 0% { transform: scale(1); } 40% { transform: scale(1.015); } 100% { transform: scale(1); } }
+@keyframes warningGlow { 0%, 100% { box-shadow: 0 34px 100px rgba(0, 0, 0, 0.42), 0 0 34px rgba(214, 75, 85, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.1); } 50% { box-shadow: 0 34px 100px rgba(0, 0, 0, 0.42), 0 0 calc(46px + var(--over-limit) * 64px) rgba(214, 75, 85, 0.36), inset 0 0 38px rgba(246, 206, 114, 0.14); } }
+@keyframes thresholdKick { 0% { transform: scale(1); filter: saturate(1); } 32% { transform: scale(1.025) rotate(-0.6deg); filter: saturate(1.35); } 66% { transform: scale(0.992) rotate(0.35deg); } 100% { transform: scale(1); filter: saturate(1); } }
 @keyframes numberBurst { 0% { transform: scale(1); } 40% { transform: scale(1.12) rotate(-1deg); } 100% { transform: scale(1); } }
 @keyframes archBreath { 0%, 100% { transform: scale(1); } 50% { transform: scale(calc(1 + min(var(--intensity), 1) * 0.025)); } }
-@keyframes leafFlutter { 0%, 100% { filter: brightness(1); transform: rotate(-28deg) translateX(0); } 50% { filter: brightness(1.25); transform: rotate(-18deg) translateX(3px); } }
-@keyframes warningTremble { 0%, 100% { margin-left: 0; } 50% { margin-left: 3px; } }
+@keyframes linePulse { 0%, 100% { filter: brightness(1); transform: rotate(-28deg) translateX(0); } 50% { filter: brightness(1.25); transform: rotate(-18deg) translateX(3px); } }
+@keyframes glassWarning { 0%, 100% { transform: perspective(760px) rotateX(-5deg) translate3d(0, 0, 0); } 25% { transform: perspective(760px) rotateX(-5deg) translate3d(calc(-2px - var(--over-limit) * 4px), -5px, 0) rotateZ(-0.6deg); } 50% { transform: perspective(760px) rotateX(-5deg) translate3d(0, -9px, 0); } 75% { transform: perspective(760px) rotateX(-5deg) translate3d(calc(2px + var(--over-limit) * 4px), -4px, 0) rotateZ(0.6deg); } }
+@keyframes glassKick { 0% { transform: perspective(760px) rotateX(-5deg) translateY(0) scale(1); } 30% { transform: perspective(760px) rotateX(-5deg) translateY(-18px) scale(1.035) rotateZ(-1.5deg); } 62% { transform: perspective(760px) rotateX(-5deg) translateY(5px) scale(0.988) rotateZ(1deg); } 100% { transform: perspective(760px) rotateX(-5deg) translateY(0) scale(1); } }
+@keyframes floorFlash { 0% { opacity: 0.35; filter: saturate(1); } 22% { opacity: 1; filter: saturate(1.8); } 100% { opacity: 0.78; filter: saturate(1); } }
 @keyframes thresholdToast { 0% { opacity: 0; transform: translateY(20px) scale(0.92); } 12%, 82% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-10px) scale(0.98); } }
-@keyframes ornamentDrift { 0%, 100% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(8deg) scale(1.05); } }
-@keyframes medallionPulse { 0%, 100% { transform: rotate(45deg) scale(0.84); opacity: 0.7; } 50% { transform: rotate(45deg) scale(1.1); opacity: 1; } }
-@keyframes roseTurn { to { transform: rotate(360deg); } }
-@keyframes petalBreathe { 0%, 100% { filter: saturate(1); } 50% { filter: saturate(1.4) brightness(1.1); } }
+@keyframes frameDrift { 0%, 100% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(8deg) scale(1.05); } }
+@keyframes badgePulse { 0%, 100% { transform: rotate(45deg) scale(0.84); opacity: 0.7; } 50% { transform: rotate(45deg) scale(1.1); opacity: 1; } }
+@keyframes markersTurn { to { transform: rotate(360deg); } }
+@keyframes markerBreathe { 0%, 100% { filter: saturate(1); } 50% { filter: saturate(1.4) brightness(1.1); } }
 @keyframes todayGlow { 0%, 100% { box-shadow: 0 0 0 rgba(117, 213, 157, 0); } 50% { box-shadow: 0 0 22px rgba(117, 213, 157, 0.24); } }
 @keyframes shimmer { 0% { transform: translateX(-110%); } 100% { transform: translateX(110%); } }
 @keyframes drawLine { from { stroke-dashoffset: 520; } to { stroke-dashoffset: 0; } }
