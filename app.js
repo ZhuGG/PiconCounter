@@ -367,9 +367,9 @@ function render() {
   refs.dailyMeterLabel.textContent = dailyLimit === 0 ? `${formatNumber(today.standardDrinks)} / 0` : `${formatNumber(today.standardDrinks)} / ${DAILY_LIMIT}`;
   refs.weeklyMeterLabel.textContent = `${formatNumber(week.standardDrinks)} / ${WEEKLY_LIMIT}`;
 
-  const fill = today.standardDrinks === 0 ? 0 : clamp((today.standardDrinks / DAILY_LIMIT) * 86 + 10, 10, 96);
-  document.documentElement.style.setProperty("--fill", `${fill}%`);
-  refs.animatedGlass.classList.toggle("has-liquid", today.standardDrinks > 0);
+  const weeklyFill = week.standardDrinks === 0 ? 0 : clamp((week.standardDrinks / WEEKLY_LIMIT) * 86 + 10, 10, 96);
+  document.documentElement.style.setProperty("--fill", `${weeklyFill}%`);
+  refs.animatedGlass.classList.toggle("has-liquid", week.standardDrinks > 0);
 
   renderStatus(today, week, flags);
   renderRhythm(today, flags);
