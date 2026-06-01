@@ -4,12 +4,18 @@ const STANDARD_GRAMS = 10;
 const DAILY_LIMIT = 2;
 const WEEKLY_LIMIT = 10;
 const DRY_DAYS_TARGET = 2;
+const PRESET_DISPLAY_NAMES = {
+  demi: "Demi",
+  pinte: "Pinte",
+  leger: "Léger",
+  schwartz: "Shwartz",
+};
 
 const PRESETS = {
-  demi: { key: "demi", name: "Demi rétro", beerMl: 250, beerAbv: 5, piconMl: 30, piconAbv: 18 },
-  pinte: { key: "pinte", name: "Pinte néon", beerMl: 500, beerAbv: 5, piconMl: 50, piconAbv: 18 },
-  leger: { key: "leger", name: "Léger laser", beerMl: 250, beerAbv: 4.5, piconMl: 20, piconAbv: 18 },
-  schwartz: { key: "schwartz", name: "Shwartz noir", beerMl: 330, beerAbv: 5.2, piconMl: 35, piconAbv: 18 },
+  demi: { key: "demi", name: "Demi", beerMl: 250, beerAbv: 5, piconMl: 30, piconAbv: 18 },
+  pinte: { key: "pinte", name: "Pinte", beerMl: 500, beerAbv: 5, piconMl: 50, piconAbv: 18 },
+  leger: { key: "leger", name: "Léger", beerMl: 250, beerAbv: 4.5, piconMl: 20, piconAbv: 18 },
+  schwartz: { key: "schwartz", name: "Shwartz", beerMl: 330, beerAbv: 5.2, piconMl: 35, piconAbv: 18 },
 };
 
 const PRESET_ALIASES = {
@@ -52,6 +58,8 @@ const refs = {
   statusText: $("#statusText"),
   rhythmTitle: $("#rhythmTitle"),
   rhythmText: $("#rhythmText"),
+  weekRose: $("#weekRose"),
+  visualCaption: $("#visualCaption"),
   weekRange: $("#weekRange"),
   weekTotal: $("#weekTotal"),
   weekBars: $("#weekBars"),
@@ -70,8 +78,6 @@ const refs = {
   dashboardTrendLabels: $("#dashboardTrendLabels"),
   dashboardTypes: $("#dashboardTypes"),
   logList: $("#logList"),
-  driveToggle: $("#driveToggle"),
-  pauseToggle: $("#pauseToggle"),
   beerMl: $("#beerMl"),
   beerAbv: $("#beerAbv"),
   piconMl: $("#piconMl"),
@@ -103,9 +109,6 @@ function bindEvents() {
   $("#exportButton").addEventListener("click", exportData);
   $("#importInput").addEventListener("change", importData);
   $("#resetButton").addEventListener("click", resetAll);
-
-  refs.driveToggle.addEventListener("change", () => updateFlag("drive", refs.driveToggle.checked));
-  refs.pauseToggle.addEventListener("change", () => updateFlag("pause", refs.pauseToggle.checked));
 
   $$(".tab").forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
@@ -300,7 +303,7 @@ function normalizeRecipe(recipe) {
 
   const presetKey = PRESET_ALIASES[recipe.key] || recipe.key;
   if (presetKey && PRESETS[presetKey]) {
-    return { ...PRESETS[presetKey], ...recipe, key: presetKey };
+    return { ...PRESETS[presetKey], ...recipe, key: presetKey, name: PRESETS[presetKey].name };
   }
 
   const legacyMatch = Object.entries(PRESETS).find(([, preset]) =>
@@ -341,60 +344,43 @@ function render() {
   const key = todayKey();
   const today = aggregateDay(key);
   const week = aggregateWeek(key);
-  const flags = state.flagsByDate[key] || {};
-  const zeroMode = Boolean(flags.drive || flags.pause);
-  const dailyLimit = zeroMode ? 0 : DAILY_LIMIT;
   const perPicon = recipeStandardDrinks();
 
   refs.todayDate.textContent = formatDay(key, { weekday: "long", day: "numeric", month: "long" });
   refs.todayPicons.textContent = today.count;
   refs.piconLabel.textContent = today.count > 1 ? "Picons" : "Picon";
   refs.standardLine.textContent = `${formatNumber(today.standardDrinks)} verre standard`;
-  refs.selectedPiconLine.textContent = state.recipe.name;
+  refs.selectedPiconLine.textContent = recipeDisplayName(state.recipe);
   refs.todayStandards.textContent = formatNumber(today.standardDrinks);
-  refs.perPiconLine.textContent = `1 ${state.recipe.name} = ${formatNumber(perPicon)} verre standard`;
+  refs.perPiconLine.textContent = `1 ${recipeDisplayName(state.recipe)} = ${formatNumber(perPicon)} verre standard`;
   refs.waterCount.textContent = today.waterCount;
   refs.waterLine.textContent = today.waterCount > 1 ? "Verres d'eau notés" : "Verre d'eau noté";
   refs.dryDays.textContent = `${week.dryDays}/${DRY_DAYS_TARGET}`;
-  refs.driveToggle.checked = Boolean(flags.drive);
-  refs.pauseToggle.checked = Boolean(flags.pause);
 
   $("#removeButton").disabled = today.count === 0;
 
-  const dailyPercent = dailyLimit === 0 ? (today.standardDrinks > 0 ? 100 : 0) : (today.standardDrinks / DAILY_LIMIT) * 100;
+  const dailyPercent = (today.standardDrinks / DAILY_LIMIT) * 100;
   refs.dailyMeter.style.width = `${clamp(dailyPercent, 0, 100)}%`;
   refs.weeklyMeter.style.width = `${clamp((week.standardDrinks / WEEKLY_LIMIT) * 100, 0, 100)}%`;
-  refs.dailyMeterLabel.textContent = dailyLimit === 0 ? `${formatNumber(today.standardDrinks)} / 0` : `${formatNumber(today.standardDrinks)} / ${DAILY_LIMIT}`;
+  refs.dailyMeterLabel.textContent = `${formatNumber(today.standardDrinks)} / ${DAILY_LIMIT}`;
   refs.weeklyMeterLabel.textContent = `${formatNumber(week.standardDrinks)} / ${WEEKLY_LIMIT}`;
 
   const weeklyFill = week.standardDrinks === 0 ? 0 : clamp((week.standardDrinks / WEEKLY_LIMIT) * 86 + 10, 10, 96);
   document.documentElement.style.setProperty("--fill", `${weeklyFill}%`);
   refs.animatedGlass.classList.toggle("has-liquid", week.standardDrinks > 0);
 
-  renderStatus(today, week, flags);
-  renderRhythm(today, flags);
+  renderStatus(today, week);
+  renderRhythm(today);
+  renderWeekRose(week);
   renderDashboard(today, week);
   renderWeek(week);
   renderLog();
   renderRecipe();
 }
 
-function renderStatus(today, week, flags) {
+function renderStatus(today, week) {
   refs.statusDot.className = "status-dot";
 
-  if (flags.drive && today.standardDrinks > 0) {
-    refs.statusDot.classList.add("danger");
-    refs.statusTitle.textContent = "Conduite prévue";
-    refs.statusText.textContent = "La situation conduite se joue à zéro alcool. Le journal garde la trace du dépassement.";
-    return;
-  }
-
-  if (flags.pause && today.standardDrinks > 0) {
-    refs.statusDot.classList.add("warn");
-    refs.statusTitle.textContent = "Pause rompue";
-    refs.statusText.textContent = "La journée était marquée comme pause, mais un Picon-bière a été ajouté.";
-    return;
-  }
 
   if (today.standardDrinks > DAILY_LIMIT) {
     refs.statusDot.classList.add("danger");
@@ -421,10 +407,10 @@ function renderStatus(today, week, flags) {
   refs.statusText.textContent = "La journée compte comme jour sans alcool dans le suivi hebdomadaire.";
 }
 
-function renderRhythm(today, flags) {
+function renderRhythm(today) {
   if (today.count === 0) {
-    refs.rhythmTitle.textContent = flags.pause ? "Pause active" : "Rien au compteur";
-    refs.rhythmText.textContent = "La journée compte comme pause tant qu'aucun Picon-bière n'est ajouté.";
+    refs.rhythmTitle.textContent = "Rien au compteur";
+    refs.rhythmText.textContent = "La rosace reste lumineuse tant qu'aucun Picon-bière n'est ajouté.";
     return;
   }
 
@@ -437,6 +423,35 @@ function renderRhythm(today, flags) {
     waterGap > 0
       ? `Dernier à ${lastTime}. Eau alternée manquante : ${waterGap}.`
       : `Dernier à ${lastTime}. Alternance eau équilibrée.`;
+}
+
+function recipeDisplayName(recipe) {
+  if (!recipe || typeof recipe !== "object") return "Picon";
+  const key = PRESET_ALIASES[recipe.key] || recipe.key;
+  if (key && PRESET_DISPLAY_NAMES[key]) return PRESET_DISPLAY_NAMES[key];
+  const rawName = recipe.name || recipe.recipeName || "Perso";
+  return rawName.replace(/\s+(rétro|néon|laser|noir)$/iu, "");
+}
+
+function renderWeekRose(week) {
+  refs.weekRose.innerHTML = "";
+
+  const max = Math.max(DAILY_LIMIT, ...week.days.map((day) => day.standardDrinks));
+  const activeDays = week.days.filter((day) => day.standardDrinks > 0).length;
+  refs.visualCaption.textContent = activeDays === 0
+    ? "Rosace claire : aucun Picon-bière enregistré cette semaine."
+    : `${activeDays} pétale${activeDays > 1 ? "s" : ""} ambré${activeDays > 1 ? "s" : ""} sur la semaine.`;
+
+  week.days.forEach((day, index) => {
+    const petal = document.createElement("span");
+    const intensity = clamp(day.standardDrinks / max, 0, 1);
+    petal.className = `rose-petal${day.date === todayKey() ? " today" : ""}`;
+    petal.style.setProperty("--angle", `${index * (360 / week.days.length)}deg`);
+    petal.style.setProperty("--intensity", intensity.toFixed(2));
+    petal.title = `${formatDay(day.date, { weekday: "long" })} : ${formatNumber(day.standardDrinks)} verre standard`;
+    petal.setAttribute("aria-label", petal.title);
+    refs.weekRose.append(petal);
+  });
 }
 
 function renderWeek(week) {
@@ -553,7 +568,7 @@ function renderTrend(days) {
 function renderTypeDistribution(days) {
   const counts = new Map();
   days.reduce((entries, day) => entries.concat(day.entries), []).forEach((entry) => {
-    const name = (entry.recipe && entry.recipe.name) || entry.recipeName || "Picon";
+    const name = recipeDisplayName(entry.recipe) || entry.recipeName || "Picon";
     counts.set(name, (counts.get(name) || 0) + 1);
   });
 
@@ -617,8 +632,8 @@ function renderRecipe() {
   const standards = recipeStandardDrinks();
   refs.recipeGrams.textContent = `${formatNumber(grams)} g d'alcool pur`;
   refs.recipeStandards.textContent = `${formatNumber(standards)} verre standard`;
-  refs.selectedPiconLine.textContent = state.recipe.name;
-  refs.perPiconLine.textContent = `1 ${state.recipe.name} = ${formatNumber(standards)} verre standard`;
+  refs.selectedPiconLine.textContent = recipeDisplayName(state.recipe);
+  refs.perPiconLine.textContent = `1 ${recipeDisplayName(state.recipe)} = ${formatNumber(standards)} verre standard`;
 }
 
 function renderPresetState() {
@@ -688,7 +703,7 @@ function dominantType(day) {
   if (day.entries.length === 0) return "pause";
   const counts = new Map();
   day.entries.forEach((entry) => {
-    const name = (entry.recipe && entry.recipe.name) || entry.recipeName || "Picon";
+    const name = recipeDisplayName(entry.recipe) || entry.recipeName || "Picon";
     counts.set(name, (counts.get(name) || 0) + 1);
   });
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];

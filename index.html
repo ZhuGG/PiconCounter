@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#090706" />
+    <meta name="theme-color" content="#211407" />
     <title>Picon Counter</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
@@ -31,7 +31,7 @@
         <div class="counter-stack">
           <p class="kicker">Rituel de la semaine</p>
           <h1 id="counterTitle"><span id="todayPicons">0</span> <span id="piconLabel">Picon</span></h1>
-          <p class="counter-subline"><span id="standardLine">0 verre standard</span> · <span id="selectedPiconLine">Demi rétro</span></p>
+          <p class="counter-subline"><span id="standardLine">0 verre standard</span> · <span id="selectedPiconLine">Demi</span></p>
 
           <div class="hero-actions" aria-label="Actions compteur">
             <button class="icon-button ghost" id="removeButton" type="button" aria-label="Retirer le dernier Picon">
@@ -72,9 +72,12 @@
         </div>
 
         <div class="glass-stage" aria-label="Verre de Picon-bière animé sur la semaine">
+          <div class="nouveau-arch" aria-hidden="true"></div>
           <div class="week-aura" aria-hidden="true"></div>
           <div class="orbit orbit-one" aria-hidden="true"></div>
           <div class="orbit orbit-two" aria-hidden="true"></div>
+          <div class="vine vine-left" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="vine vine-right" aria-hidden="true"><span></span><span></span><span></span></div>
           <div class="pour-stream" id="pourStream" aria-hidden="true"></div>
           <div class="glass" id="animatedGlass">
             <div class="glass-shine" aria-hidden="true"></div>
@@ -141,21 +144,13 @@
           </article>
         </div>
 
-        <article class="panel zero-panel">
+        <article class="panel visual-panel">
           <div>
-            <span class="panel-label">Situations zéro</span>
-            <h2>Objectif du jour</h2>
+            <span class="panel-label">Rosace semaine</span>
+            <h2>Lecture visuelle</h2>
           </div>
-          <div class="toggle-list">
-            <label class="switch-row">
-              <input type="checkbox" id="driveToggle" />
-              <span>Conduite prévue</span>
-            </label>
-            <label class="switch-row">
-              <input type="checkbox" id="pauseToggle" />
-              <span>Journée pause</span>
-            </label>
-          </div>
+          <div class="week-rose" id="weekRose" aria-label="Rosace des verres standard de la semaine"></div>
+          <p class="visual-caption" id="visualCaption">Chaque pétale représente un jour de la semaine.</p>
         </article>
 
         <article class="panel rhythm-panel">
@@ -170,7 +165,7 @@
       <section class="view" id="dashboardView">
         <article class="panel dashboard-hero-panel">
           <div>
-            <span class="panel-label">Dashboard néon</span>
+            <span class="panel-label">Dashboard</span>
             <h2 id="dashboardInsightTitle">Radar semaine</h2>
             <p id="dashboardInsight">Aucune donnée récente, le compteur attend le premier Picon-bière.</p>
           </div>
