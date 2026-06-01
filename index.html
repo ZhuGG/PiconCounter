@@ -29,7 +29,6 @@
 
       <section class="hero" aria-labelledby="counterTitle">
         <div class="counter-stack">
-          <p class="kicker">Rituel de la semaine</p>
           <h1 id="counterTitle"><span id="todayPicons">0</span> <span id="piconLabel">Picon</span></h1>
           <p class="counter-subline"><span id="standardLine">0 verre standard</span> · <span id="selectedPiconLine">Demi</span></p>
 
@@ -90,6 +89,10 @@
               <span></span><span></span><span></span><span></span>
             </div>
           </div>
+          <div class="threshold-alert" id="thresholdAlert" role="status" aria-live="assertive" aria-hidden="true">
+            <strong>Seuil atteint</strong>
+            <span>Le repère est franchi : ralentis, hydrate-toi, fais une pause.</span>
+          </div>
           <div class="glass-shadow" aria-hidden="true"></div>
         </div>
       </section>
@@ -144,19 +147,25 @@
           </article>
         </div>
 
-        <article class="panel visual-panel">
-          <div>
-            <span class="panel-label">Rosace semaine</span>
-            <h2>Lecture visuelle</h2>
+        <article class="panel visual-panel nouveau-panel">
+          <div class="panel-heading compact-heading">
+            <div>
+              <span class="panel-label">Rosace art nouveau</span>
+              <h2>Jardin de la journée</h2>
+            </div>
+            <span class="ornament-badge" aria-hidden="true">✦</span>
           </div>
           <div class="week-rose" id="weekRose" aria-label="Rosace des verres standard de la semaine"></div>
           <p class="visual-caption" id="visualCaption">Chaque pétale représente un jour de la semaine.</p>
         </article>
 
-        <article class="panel rhythm-panel">
-          <div>
-            <span class="panel-label">Rythme</span>
-            <h2 id="rhythmTitle">Rien au compteur</h2>
+        <article class="panel rhythm-panel nouveau-panel">
+          <div class="panel-heading compact-heading">
+            <div>
+              <span class="panel-label">Arabesque de rythme</span>
+              <h2 id="rhythmTitle">Rien au compteur</h2>
+            </div>
+            <span class="pulse-medallion" aria-hidden="true"></span>
           </div>
           <p id="rhythmText">La journée compte comme pause tant qu'aucun Picon-bière n'est ajouté.</p>
         </article>
@@ -165,7 +174,7 @@
       <section class="view" id="dashboardView">
         <article class="panel dashboard-hero-panel">
           <div>
-            <span class="panel-label">Dashboard</span>
+            <span class="panel-label">Salon des signaux</span>
             <h2 id="dashboardInsightTitle">Radar semaine</h2>
             <p id="dashboardInsight">Aucune donnée récente, le compteur attend le premier Picon-bière.</p>
           </div>
@@ -200,8 +209,8 @@
         <article class="panel chart-panel">
           <div class="panel-heading">
             <div>
-              <span class="panel-label">Courbe 14 jours</span>
-              <h2>Verres standard</h2>
+              <span class="panel-label">Liane 14 jours</span>
+              <h2>Courbe organique</h2>
             </div>
             <span class="chart-limit">Repère 2/j</span>
           </div>
@@ -212,7 +221,7 @@
         <article class="panel chart-panel">
           <div class="panel-heading">
             <div>
-              <span class="panel-label">Répartition</span>
+              <span class="panel-label">Mosaïque</span>
               <h2>Formats Picon</h2>
             </div>
           </div>
@@ -224,7 +233,7 @@
         <article class="panel week-panel">
           <div class="panel-heading">
             <div>
-              <span class="panel-label">Semaine en cours</span>
+              <span class="panel-label">Vitrail hebdomadaire</span>
               <h2 id="weekRange">Lundi - dimanche</h2>
             </div>
             <strong id="weekTotal">0</strong>
@@ -250,7 +259,7 @@
         <article class="panel log-panel">
           <div class="panel-heading">
             <div>
-              <span class="panel-label">Historique</span>
+              <span class="panel-label">Carnet Belle Époque</span>
               <h2>Derniers jours</h2>
             </div>
             <button class="text-button danger" id="clearTodayButton" type="button">Effacer jour</button>
@@ -260,7 +269,7 @@
 
         <article class="panel data-panel">
           <div>
-            <span class="panel-label">Données locales</span>
+            <span class="panel-label">Écrin local</span>
             <h2>Sauvegarde</h2>
           </div>
           <div class="data-actions">
@@ -277,8 +286,8 @@
       <section class="view" id="recipeView">
         <article class="panel recipe-panel">
           <div>
-            <span class="panel-label">Picon-bière uniquement</span>
-            <h2>Format du verre</h2>
+            <span class="panel-label">Atelier du verre</span>
+            <h2>Recette ouvragée</h2>
           </div>
           <div class="preset-row">
             <button class="preset active" type="button" data-preset="demi">Demi</button>
@@ -312,11 +321,17 @@
           </div>
         </article>
 
-        <article class="panel source-panel">
-          <span class="panel-label">Repères français</span>
+        <article class="panel source-panel legal-panel">
+          <span class="panel-label">Mentions légales & repères français</span>
+          <p><strong>L'abus d'alcool est dangereux pour la santé, à consommer avec modération.</strong></p>
           <p>Un verre standard contient 10 g d'alcool pur. Le repère adulte est de 10 verres standard par semaine, 2 par jour maximum, avec des jours sans alcool.</p>
         </article>
       </section>
+
+      <footer class="legal-footer">
+        <strong>L'abus d'alcool est dangereux pour la santé.</strong>
+        <span>Application de suivi personnel — à consommer avec modération.</span>
+      </footer>
     </main>
 
     <script src="app.js" defer></script>

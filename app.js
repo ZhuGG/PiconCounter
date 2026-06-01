@@ -86,6 +86,7 @@ const refs = {
   recipeStandards: $("#recipeStandards"),
   animatedGlass: $("#animatedGlass"),
   pourStream: $("#pourStream"),
+  thresholdAlert: $("#thresholdAlert"),
   bubbleLayer: $("#bubbleLayer"),
   installButton: $("#installButton"),
 };
@@ -219,8 +220,9 @@ function addPicon() {
     grams: recipeAlcoholGrams(recipe),
   });
   saveState();
-  animatePour();
   render();
+  animatePour();
+  animateThresholdAlert();
 }
 
 function removeLastPicon() {
@@ -360,8 +362,13 @@ function render() {
   $("#removeButton").disabled = today.count === 0;
 
   const dailyPercent = (today.standardDrinks / DAILY_LIMIT) * 100;
+  const weeklyPercent = (week.standardDrinks / WEEKLY_LIMIT) * 100;
+  const intensity = clamp(Math.max(dailyPercent, weeklyPercent) / 100, 0, 1.35);
+  document.body.style.setProperty("--intensity", intensity.toFixed(2));
+  document.body.classList.toggle("threshold-near", intensity >= 0.72 && intensity < 1);
+  document.body.classList.toggle("threshold-reached", intensity >= 1);
   refs.dailyMeter.style.width = `${clamp(dailyPercent, 0, 100)}%`;
-  refs.weeklyMeter.style.width = `${clamp((week.standardDrinks / WEEKLY_LIMIT) * 100, 0, 100)}%`;
+  refs.weeklyMeter.style.width = `${clamp(weeklyPercent, 0, 100)}%`;
   refs.dailyMeterLabel.textContent = `${formatNumber(today.standardDrinks)} / ${DAILY_LIMIT}`;
   refs.weeklyMeterLabel.textContent = `${formatNumber(week.standardDrinks)} / ${WEEKLY_LIMIT}`;
 
@@ -381,18 +388,17 @@ function render() {
 function renderStatus(today, week) {
   refs.statusDot.className = "status-dot";
 
-
-  if (today.standardDrinks > DAILY_LIMIT) {
+  if (today.standardDrinks >= DAILY_LIMIT) {
     refs.statusDot.classList.add("danger");
-    refs.statusTitle.textContent = "Au-dessus du repère jour";
-    refs.statusText.textContent = `Aujourd'hui : ${formatNumber(today.standardDrinks)} verres standard pour un repère de ${DAILY_LIMIT}.`;
+    refs.statusTitle.textContent = today.standardDrinks > DAILY_LIMIT ? "Au-dessus du repère jour" : "Seuil journalier atteint";
+    refs.statusText.textContent = `Aujourd'hui : ${formatNumber(today.standardDrinks)} verres standard pour un repère de ${DAILY_LIMIT}. L'abus d'alcool est dangereux : pause et eau recommandées.`;
     return;
   }
 
-  if (week.standardDrinks > WEEKLY_LIMIT) {
+  if (week.standardDrinks >= WEEKLY_LIMIT) {
     refs.statusDot.classList.add("danger");
-    refs.statusTitle.textContent = "Au-dessus du repère semaine";
-    refs.statusText.textContent = `Semaine : ${formatNumber(week.standardDrinks)} verres standard pour un repère de ${WEEKLY_LIMIT}.`;
+    refs.statusTitle.textContent = week.standardDrinks > WEEKLY_LIMIT ? "Au-dessus du repère semaine" : "Seuil hebdomadaire atteint";
+    refs.statusText.textContent = `Semaine : ${formatNumber(week.standardDrinks)} verres standard pour un repère de ${WEEKLY_LIMIT}. Ralentis le rythme.`;
     return;
   }
 
@@ -439,14 +445,15 @@ function renderWeekRose(week) {
   const max = Math.max(DAILY_LIMIT, ...week.days.map((day) => day.standardDrinks));
   const activeDays = week.days.filter((day) => day.standardDrinks > 0).length;
   refs.visualCaption.textContent = activeDays === 0
-    ? "Rosace claire : aucun Picon-bière enregistré cette semaine."
-    : `${activeDays} pétale${activeDays > 1 ? "s" : ""} ambré${activeDays > 1 ? "s" : ""} sur la semaine.`;
+    ? "Rosace claire : les feuilles restent calmes et lumineuses."
+    : `${activeDays} pétale${activeDays > 1 ? "s" : ""} ambré${activeDays > 1 ? "s" : ""} ; les arabesques se renforcent avec le seuil.`;
 
   week.days.forEach((day, index) => {
     const petal = document.createElement("span");
     const intensity = clamp(day.standardDrinks / max, 0, 1);
     petal.className = `rose-petal${day.date === todayKey() ? " today" : ""}`;
     petal.style.setProperty("--angle", `${index * (360 / week.days.length)}deg`);
+    petal.style.setProperty("--petal-delay", `${index * -0.18}s`);
     petal.style.setProperty("--intensity", intensity.toFixed(2));
     petal.title = `${formatDay(day.date, { weekday: "long" })} : ${formatNumber(day.standardDrinks)} verre standard`;
     petal.setAttribute("aria-label", petal.title);
@@ -503,7 +510,7 @@ function renderDashboard(today, week) {
   refs.dashboardPeakLabel.textContent = peak.standardDrinks > 0 ? formatDay(peak.date, { weekday: "short", day: "numeric" }) : "Aucun jour";
   refs.dashboardPace.textContent = `${pace}%`;
 
-  if (week.standardDrinks > WEEKLY_LIMIT) {
+  if (week.standardDrinks >= WEEKLY_LIMIT) {
     refs.dashboardInsightTitle.textContent = "Signal rouge";
     refs.dashboardInsight.textContent = `La semaine est à ${formatNumber(week.standardDrinks)} verres standard, au-dessus du repère de ${WEEKLY_LIMIT}.`;
   } else if (today.standardDrinks > DAILY_LIMIT) {
@@ -585,7 +592,7 @@ function renderTypeDistribution(days) {
   const max = Math.max(...counts.values());
   [...counts.entries()].sort((a, b) => b[1] - a[1]).forEach(([name, count]) => {
     const row = document.createElement("div");
-    row.className = "type-row";
+    row.className = "type-row nouveau-row";
     row.innerHTML = `
       <span>${name}</span>
       <div class="type-track"><i style="width: ${clamp((count / max) * 100, 8, 100)}%"></i></div>
@@ -610,7 +617,7 @@ function renderLog() {
   days.forEach((key) => {
     const day = aggregateDay(key);
     const row = document.createElement("article");
-    row.className = "log-item";
+    row.className = "log-item nouveau-row";
 
     const text = document.createElement("div");
     const title = document.createElement("strong");
@@ -723,8 +730,24 @@ function uniqueDays() {
 
 function animatePour() {
   refs.pourStream.classList.remove("active");
+  document.body.classList.remove("drink-added");
   void refs.pourStream.offsetWidth;
   refs.pourStream.classList.add("active");
+  document.body.classList.add("drink-added");
+  window.setTimeout(() => document.body.classList.remove("drink-added"), 1050);
+}
+
+function animateThresholdAlert() {
+  if (!document.body.classList.contains("threshold-reached") || !refs.thresholdAlert) return;
+  refs.thresholdAlert.hidden = false;
+  refs.thresholdAlert.setAttribute("aria-hidden", "false");
+  refs.thresholdAlert.classList.remove("active");
+  void refs.thresholdAlert.offsetWidth;
+  refs.thresholdAlert.classList.add("active");
+  window.setTimeout(() => {
+    refs.thresholdAlert.classList.remove("active");
+    refs.thresholdAlert.setAttribute("aria-hidden", "true");
+  }, 3800);
 }
 
 function buildBubbles() {
