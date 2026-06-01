@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#130a0e" />
+    <meta name="theme-color" content="#090706" />
     <title>Picon Counter</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
@@ -29,7 +29,7 @@
 
       <section class="hero" aria-labelledby="counterTitle">
         <div class="counter-stack">
-          <p class="kicker">Compteur quotidien</p>
+          <p class="kicker">Rituel de la semaine</p>
           <h1 id="counterTitle"><span id="todayPicons">0</span> <span id="piconLabel">Picon</span></h1>
           <p class="counter-subline"><span id="standardLine">0 verre standard</span> · <span id="selectedPiconLine">Demi rétro</span></p>
 
@@ -71,7 +71,8 @@
           </div>
         </div>
 
-        <div class="glass-stage" aria-label="Verre de Picon-bière animé">
+        <div class="glass-stage" aria-label="Verre de Picon-bière animé sur la semaine">
+          <div class="week-aura" aria-hidden="true"></div>
           <div class="orbit orbit-one" aria-hidden="true"></div>
           <div class="orbit orbit-two" aria-hidden="true"></div>
           <div class="pour-stream" id="pourStream" aria-hidden="true"></div>
