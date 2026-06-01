@@ -58,7 +58,7 @@ const refs = {
   statusText: $("#statusText"),
   rhythmTitle: $("#rhythmTitle"),
   rhythmText: $("#rhythmText"),
-  weekRose: $("#weekRose"),
+  weekMarkers: $("#weekMarkers"),
   visualCaption: $("#visualCaption"),
   weekRange: $("#weekRange"),
   weekTotal: $("#weekTotal"),
@@ -363,8 +363,10 @@ function render() {
 
   const dailyPercent = (today.standardDrinks / DAILY_LIMIT) * 100;
   const weeklyPercent = (week.standardDrinks / WEEKLY_LIMIT) * 100;
-  const intensity = clamp(Math.max(dailyPercent, weeklyPercent) / 100, 0, 1.35);
+  const intensity = clamp(Math.max(dailyPercent, weeklyPercent) / 100, 0, 1.6);
+  const overLimit = clamp(intensity - 1, 0, 0.6);
   document.body.style.setProperty("--intensity", intensity.toFixed(2));
+  document.body.style.setProperty("--over-limit", overLimit.toFixed(2));
   document.body.classList.toggle("threshold-near", intensity >= 0.72 && intensity < 1);
   document.body.classList.toggle("threshold-reached", intensity >= 1);
   refs.dailyMeter.style.width = `${clamp(dailyPercent, 0, 100)}%`;
@@ -378,7 +380,7 @@ function render() {
 
   renderStatus(today, week);
   renderRhythm(today);
-  renderWeekRose(week);
+  renderWeekMarkers(week);
   renderDashboard(today, week);
   renderWeek(week);
   renderLog();
@@ -416,7 +418,7 @@ function renderStatus(today, week) {
 function renderRhythm(today) {
   if (today.count === 0) {
     refs.rhythmTitle.textContent = "Rien au compteur";
-    refs.rhythmText.textContent = "La rosace reste lumineuse tant qu'aucun Picon-bière n'est ajouté.";
+    refs.rhythmText.textContent = "Aucun Picon-bière ajouté aujourd'hui.";
     return;
   }
 
@@ -428,7 +430,7 @@ function renderRhythm(today) {
   refs.rhythmText.textContent =
     waterGap > 0
       ? `Dernier à ${lastTime}. Eau alternée manquante : ${waterGap}.`
-      : `Dernier à ${lastTime}. Alternance eau équilibrée.`;
+      : `Dernier à ${lastTime}. Alternance avec eau respectée.`;
 }
 
 function recipeDisplayName(recipe) {
@@ -439,25 +441,25 @@ function recipeDisplayName(recipe) {
   return rawName.replace(/\s+(rétro|néon|laser|noir)$/iu, "");
 }
 
-function renderWeekRose(week) {
-  refs.weekRose.innerHTML = "";
+function renderWeekMarkers(week) {
+  refs.weekMarkers.innerHTML = "";
 
   const max = Math.max(DAILY_LIMIT, ...week.days.map((day) => day.standardDrinks));
   const activeDays = week.days.filter((day) => day.standardDrinks > 0).length;
   refs.visualCaption.textContent = activeDays === 0
-    ? "Rosace claire : les feuilles restent calmes et lumineuses."
-    : `${activeDays} pétale${activeDays > 1 ? "s" : ""} ambré${activeDays > 1 ? "s" : ""} ; les arabesques se renforcent avec le seuil.`;
+    ? "Aucun jour avec Picon-bière cette semaine."
+    : `${activeDays} jour${activeDays > 1 ? "s" : ""} avec Picon-bière cette semaine.`;
 
   week.days.forEach((day, index) => {
-    const petal = document.createElement("span");
+    const marker = document.createElement("span");
     const intensity = clamp(day.standardDrinks / max, 0, 1);
-    petal.className = `rose-petal${day.date === todayKey() ? " today" : ""}`;
-    petal.style.setProperty("--angle", `${index * (360 / week.days.length)}deg`);
-    petal.style.setProperty("--petal-delay", `${index * -0.18}s`);
-    petal.style.setProperty("--intensity", intensity.toFixed(2));
-    petal.title = `${formatDay(day.date, { weekday: "long" })} : ${formatNumber(day.standardDrinks)} verre standard`;
-    petal.setAttribute("aria-label", petal.title);
-    refs.weekRose.append(petal);
+    marker.className = `day-marker${day.date === todayKey() ? " today" : ""}`;
+    marker.style.setProperty("--angle", `${index * (360 / week.days.length)}deg`);
+    marker.style.setProperty("--marker-delay", `${index * -0.18}s`);
+    marker.style.setProperty("--intensity", intensity.toFixed(2));
+    marker.title = `${formatDay(day.date, { weekday: "long" })} : ${formatNumber(day.standardDrinks)} verre standard`;
+    marker.setAttribute("aria-label", marker.title);
+    refs.weekMarkers.append(marker);
   });
 }
 
@@ -592,7 +594,7 @@ function renderTypeDistribution(days) {
   const max = Math.max(...counts.values());
   [...counts.entries()].sort((a, b) => b[1] - a[1]).forEach(([name, count]) => {
     const row = document.createElement("div");
-    row.className = "type-row nouveau-row";
+    row.className = "type-row framed-row";
     row.innerHTML = `
       <span>${name}</span>
       <div class="type-track"><i style="width: ${clamp((count / max) * 100, 8, 100)}%"></i></div>
@@ -617,7 +619,7 @@ function renderLog() {
   days.forEach((key) => {
     const day = aggregateDay(key);
     const row = document.createElement("article");
-    row.className = "log-item nouveau-row";
+    row.className = "log-item framed-row";
 
     const text = document.createElement("div");
     const title = document.createElement("strong");
@@ -730,11 +732,14 @@ function uniqueDays() {
 
 function animatePour() {
   refs.pourStream.classList.remove("active");
-  document.body.classList.remove("drink-added");
+  document.body.classList.remove("drink-added", "threshold-burst");
   void refs.pourStream.offsetWidth;
   refs.pourStream.classList.add("active");
   document.body.classList.add("drink-added");
-  window.setTimeout(() => document.body.classList.remove("drink-added"), 1050);
+  if (document.body.classList.contains("threshold-reached")) {
+    document.body.classList.add("threshold-burst");
+  }
+  window.setTimeout(() => document.body.classList.remove("drink-added", "threshold-burst"), 1250);
 }
 
 function animateThresholdAlert() {
@@ -747,6 +752,7 @@ function animateThresholdAlert() {
   window.setTimeout(() => {
     refs.thresholdAlert.classList.remove("active");
     refs.thresholdAlert.setAttribute("aria-hidden", "true");
+    refs.thresholdAlert.hidden = true;
   }, 3800);
 }
 
