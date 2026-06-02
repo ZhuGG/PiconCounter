@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 460" role="img" aria-labelledby="title desc">
+  <title id="title">Mode discret</title>
+  <desc id="desc">Illustration d'un carnet privé et d'une serrure douce.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d0905"/>
+      <stop offset="1" stop-color="#241407"/>
+    </linearGradient>
+    <linearGradient id="lock" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9cf7d1"/>
+      <stop offset="1" stop-color="#f6ce72"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="460" rx="48" fill="url(#bg)"/>
+  <path d="M172 118h280c34 0 62 28 62 62v184H172z" fill="#fff8e7" opacity=".1" stroke="#f6ce72" stroke-opacity=".2" stroke-width="3"/>
+  <path d="M172 118h54v246h-54z" fill="#75d59d" opacity=".28"/>
+  <path d="M260 184h152M260 228h112M260 272h138" stroke="#fff8e7" stroke-width="12" stroke-linecap="round" opacity=".22"/>
+  <g transform="translate(452 224)">
+    <rect x="0" y="48" width="128" height="104" rx="28" fill="url(#lock)"/>
+    <path d="M32 48V34a32 32 0 0 1 64 0v14" fill="none" stroke="#fff8e7" stroke-width="16" stroke-linecap="round" opacity=".85"/>
+    <circle cx="64" cy="98" r="12" fill="#1f1307"/>
+    <path d="M64 108v22" stroke="#1f1307" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <path d="M144 380c88 22 168 22 244 0" stroke="#f6ce72" stroke-width="8" stroke-linecap="round" opacity=".44"/>
+  <text x="360" y="70" text-anchor="middle" fill="#fff8e7" font-family="Trebuchet MS, Arial, sans-serif" font-size="34" font-weight="900">Journal local</text>
+  <text x="360" y="414" text-anchor="middle" fill="#e1c18d" font-family="Trebuchet MS, Arial, sans-serif" font-size="22" font-weight="800">Mode discret · données dans ce navigateur</text>
+</svg>
