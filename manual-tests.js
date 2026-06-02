@@ -4,6 +4,8 @@ const STANDARD_GRAMS = 10;
 const PRESETS = {
   demi: { key: "demi", name: "Demi", beerMl: 250, beerAbv: 5, piconMl: 30, piconAbv: 18 },
   pinte: { key: "pinte", name: "Pinte", beerMl: 500, beerAbv: 5, piconMl: 50, piconAbv: 18 },
+  leger: { key: "leger", name: "Léger", beerMl: 250, beerAbv: 4.5, piconMl: 20, piconAbv: 18 },
+  schwartz: { key: "schwartz", name: "Shwartz", beerMl: 330, beerAbv: 5.2, piconMl: 35, piconAbv: 18 },
 };
 
 function grams(recipe) {
@@ -38,6 +40,8 @@ function close(actual, expected, tolerance = 0.01) { if (Math.abs(actual - expec
 
 test("calcul du Demi", () => close(standards(PRESETS.demi), 1.42));
 test("calcul de la Pinte", () => close(standards(PRESETS.pinte), 2.68));
+test("calcul du Léger", () => close(standards(PRESETS.leger), 1.17));
+test("calcul du Shwartz", () => close(standards(PRESETS.schwartz), 1.85));
 test("calcul d’une recette personnalisée", () => close(standards({ beerMl: 330, beerAbv: 4, piconMl: 20, piconAbv: 18 }), 1.33));
 test("agrégation jour", () => {
   const state = { entries: [{ date: "2026-06-01", recipe: PRESETS.demi, standardDrinks: standards(PRESETS.demi) }, { date: "2026-06-01", recipe: PRESETS.pinte, standardDrinks: standards(PRESETS.pinte) }] };

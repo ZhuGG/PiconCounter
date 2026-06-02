@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#211407" />
     <meta name="description" content="PWA personnelle offline pour suivre localement les Picon-bières et les verres standard." />
     <meta property="og:title" content="Picon Counter" />
-    <meta property="og:description" content="Journal local et indicatif de verres standard, avec suivi hebdomadaire et mode discret." />
+    <meta property="og:description" content="Journal local et indicatif de verres standard, avec suivi hebdomadaire et animations de verre." />
     <meta property="og:image" content="assets/brand/og-image.svg" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -21,13 +21,13 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <a class="brand" href="#today" aria-label="Picon Counter" data-aria-copy="app-title">
+        <a class="brand" href="#today" aria-label="Picon Counter">
           <span class="brand-mark" aria-hidden="true">
             <img src="assets/brand/icon-1024.png" alt="" decoding="async" />
             <span>PC</span>
           </span>
           <span>
-            <strong data-copy="app-title">Picon Counter</strong>
+            <strong>Picon Counter</strong>
             <small id="todayDate">Aujourd'hui</small>
           </span>
         </a>
@@ -53,7 +53,7 @@
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              <span data-copy="add-entry">Picon</span>
+              <span>Picon</span>
             </button>
             <button class="icon-button ghost" id="waterButton" type="button" aria-label="Marquer un verre d'eau">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -88,6 +88,7 @@
 
         <div class="glass-stage" aria-label="Verre de Picon-bière animé sur la semaine">
           <div class="stage-arch" aria-hidden="true"></div>
+          <div class="stage-caustics" aria-hidden="true"></div>
           <div class="week-aura" aria-hidden="true"></div>
           <div class="orbit orbit-one" aria-hidden="true"></div>
           <div class="orbit orbit-two" aria-hidden="true"></div>
@@ -95,7 +96,9 @@
           <div class="side-line side-line-right" aria-hidden="true"><span></span><span></span><span></span></div>
           <div class="pour-stream" id="pourStream" aria-hidden="true"></div>
           <div class="glass" id="animatedGlass">
+            <div class="glass-rim" aria-hidden="true"></div>
             <div class="glass-shine" aria-hidden="true"></div>
+            <div class="condensation" id="condensationLayer" aria-hidden="true"></div>
             <div class="bubbles" id="bubbleLayer" aria-hidden="true"></div>
             <div class="liquid" aria-hidden="true">
               <div class="wave wave-front"></div>
@@ -127,10 +130,6 @@
             <span class="panel-label">Objectif personnel</span>
             <h2 id="objectiveTitle">Suivi sans encouragement</h2>
           </div>
-          <label class="switch-line">
-            <input id="discreetMode" type="checkbox" />
-            <span>Mode discret</span>
-          </label>
         </div>
         <div class="objective-grid">
           <label>
@@ -150,7 +149,7 @@
             <input id="dryDaysGoal" type="number" min="0" max="7" step="1" inputmode="numeric" />
           </label>
         </div>
-        <p class="privacy-note" id="privacyNote">Données conservées uniquement dans le stockage local de ce navigateur : rien n’est envoyé à un serveur.</p>
+        <p class="privacy-note">Données conservées uniquement dans le stockage local de ce navigateur : rien n’est envoyé à un serveur.</p>
         <p class="objective-feedback" id="goalFeedback">Mode Observer : simple suivi personnel.</p>
       </section>
 
@@ -279,7 +278,7 @@
           <div class="panel-heading">
             <div>
               <span class="panel-label">Mosaïque</span>
-              <h2 data-copy="formats-title">Formats Picon</h2>
+              <h2>Formats Picon</h2>
             </div>
           </div>
           <div class="type-bars" id="dashboardTypes"></div>
