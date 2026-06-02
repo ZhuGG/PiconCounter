@@ -69,6 +69,7 @@ const refs = {
   rhythmTitle: $("#rhythmTitle"),
   rhythmText: $("#rhythmText"),
   weekMarkers: $("#weekMarkers"),
+  visualIllustration: $("#visualIllustration"),
   visualCaption: $("#visualCaption"),
   weekRange: $("#weekRange"),
   weekTotal: $("#weekTotal"),
@@ -516,9 +517,17 @@ function renderWeekMarkers(week) {
 
   const max = Math.max(DAILY_LIMIT, ...week.days.map((day) => day.standardDrinks));
   const activeDays = week.days.filter((day) => day.standardDrinks > 0).length;
+  const reachedLimit = week.days.some((day) => day.standardDrinks >= DAILY_LIMIT) || week.standardDrinks >= weeklyLimit();
   refs.visualCaption.textContent = activeDays === 0
     ? "Aucun jour avec alcool noté cette semaine."
     : `${activeDays} jour${activeDays > 1 ? "s" : ""} avec entrée alcoolisée cette semaine.`;
+  if (refs.visualIllustration) {
+    refs.visualIllustration.src = reachedLimit
+      ? "assets/illustrations/threshold-reached.svg"
+      : state.settings.discreetMode
+        ? "assets/illustrations/discreet-mode.svg"
+        : "assets/illustrations/empty-today.svg";
+  }
 
   week.days.forEach((day, index) => {
     const marker = document.createElement("span");

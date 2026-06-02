@@ -18,6 +18,7 @@
   --fill: 0%;
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --ornament-image: url("assets/brand/art-nouveau-bg.png");
   font-family:
     "Trebuchet MS", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
@@ -54,11 +55,15 @@ body::after {
 
 body::before {
   background:
+    linear-gradient(rgba(13, 9, 5, 0.24), rgba(13, 9, 5, 0.82)),
+    var(--ornament-image) center top / min(1120px, 116vw) auto no-repeat,
     radial-gradient(ellipse at 50% -16%, transparent 0 39%, rgba(246, 206, 114, 0.11) 40% 40.6%, transparent 41.2%),
     radial-gradient(ellipse at 50% -10%, transparent 0 52%, rgba(117, 213, 157, 0.08) 53% 53.7%, transparent 54.4%),
     repeating-linear-gradient(90deg, rgba(246, 206, 114, 0.03) 0 1px, transparent 1px 92px),
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.014) 0 1px, transparent 1px 92px);
-  mask-image: linear-gradient(to bottom, black, transparent 82%);
+  background-blend-mode: multiply, screen, normal, normal, normal, normal;
+  mask-image: linear-gradient(to bottom, black, transparent 86%);
+  opacity: 0.92;
   animation: loungeDrift 18s linear infinite;
 }
 
@@ -112,11 +117,13 @@ button { cursor: pointer; }
 }
 
 .brand-mark {
+  position: relative;
   display: grid;
   width: 52px;
   height: 52px;
   place-items: center;
   flex: 0 0 auto;
+  overflow: hidden;
   border: 1px solid rgba(255, 232, 177, 0.4);
   border-radius: 26px 26px 18px 18px / 34px 34px 14px 14px;
   color: var(--ink);
@@ -127,6 +134,18 @@ button { cursor: pointer; }
   font-weight: 1000;
   box-shadow: 0 18px 40px rgba(255, 154, 36, 0.28), 0 0 28px rgba(140, 255, 208, 0.16);
   transform: rotate(-3deg);
+}
+.brand-mark img {
+  position: absolute;
+  inset: -5px;
+  width: calc(100% + 10px);
+  height: calc(100% + 10px);
+  object-fit: cover;
+}
+.brand-mark span {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 8px rgba(255, 248, 231, 0.68);
 }
 
 .brand strong,
@@ -287,6 +306,15 @@ h2 {
 
 .hero-actions { gap: 10px; margin-bottom: 20px; }
 .format-strip { flex-wrap: wrap; gap: 8px; margin: -4px 0 18px; }
+.summary-icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 7px;
+  vertical-align: -4px;
+  background: url("assets/icons/context-tags.svg") center / contain no-repeat;
+  filter: drop-shadow(0 0 8px rgba(117, 213, 157, 0.28));
+}
 
 .add-button {
   display: inline-flex;
@@ -692,6 +720,24 @@ h2 {
   border-radius: 50%;
   background: radial-gradient(circle, rgba(117, 213, 157, 0.08), transparent 62%);
 }
+.visual-orbit {
+  position: relative;
+  display: grid;
+  min-height: 236px;
+  place-items: center;
+}
+.visual-illustration {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 232, 177, 0.12);
+  border-radius: 28px;
+  opacity: 0.34;
+  filter: saturate(0.9) contrast(1.08);
+  mask-image: radial-gradient(circle, transparent 0 23%, black 44%, transparent 88%);
+}
 .week-markers {
   position: relative;
   width: 178px;
@@ -779,7 +825,27 @@ h2 {
 .recipe-result { display: grid; gap: 6px; padding: 15px; border: 1px solid rgba(140, 255, 208, 0.32); border-radius: 20px; background: rgba(140, 255, 208, 0.1); }
 .recipe-result span { color: var(--muted); font-weight: 850; }
 .recipe-result strong { color: var(--mint); font-size: 1.45rem; }
-.empty-state { margin: 0; color: var(--muted); }
+.empty-state {
+  position: relative;
+  min-height: 62px;
+  margin: 0;
+  padding: 14px 14px 14px 72px;
+  border: 1px solid rgba(255, 232, 177, 0.12);
+  border-radius: 20px;
+  color: var(--muted);
+  background: rgba(255, 247, 231, 0.045);
+}
+.empty-state::before {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  width: 44px;
+  height: 44px;
+  content: "";
+  border-radius: 14px;
+  background: url("assets/illustrations/empty-today.svg") center / cover no-repeat;
+  box-shadow: 0 0 18px rgba(246, 206, 114, 0.12);
+}
 
 /* États d'alerte et transitions */
 body {
@@ -1237,8 +1303,9 @@ dialog select,
   color: var(--ink);
   background: linear-gradient(90deg, var(--mint), var(--amber-2));
 }
-body.discreet-mode .brand-mark { font-size: 0; }
-body.discreet-mode .brand-mark::after { content: "J"; font-size: 0.9rem; }
+body.discreet-mode .brand-mark span { font-size: 0; }
+body.discreet-mode .brand-mark span::after { content: "J"; font-size: 0.9rem; }
+body.discreet-mode .brand-mark img { filter: saturate(0.45) brightness(0.82); }
 body.discreet-mode .glass-stage { opacity: 0.82; }
 body.discreet-mode .kicker,
 body.discreet-mode .panel-label { letter-spacing: 0.06em; }
