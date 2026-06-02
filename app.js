@@ -4,6 +4,8 @@ const STANDARD_GRAMS = 10;
 const DAILY_LIMIT = 2;
 const WEEKLY_LIMIT = 10;
 const DRY_DAYS_TARGET = 2;
+const SCHEMA_VERSION = 2;
+const CONTEXT_TAGS = ["apéro", "repas", "fête", "stress", "solitude", "fatigue", "pression sociale", "envie réelle", "autre"];
 const PRESET_DISPLAY_NAMES = {
   demi: "Demi",
   pinte: "Pinte",
@@ -25,11 +27,19 @@ const PRESET_ALIASES = {
 };
 
 const defaultState = {
+  schemaVersion: SCHEMA_VERSION,
   entries: [],
   waters: [],
   recipe: { ...PRESETS.demi },
   flagsByDate: {},
   activeView: "today",
+  selectedTags: [],
+  settings: {
+    discreetMode: false,
+    goalMode: "observe",
+    weeklyGoal: WEEKLY_LIMIT,
+    dryDaysGoal: DRY_DAYS_TARGET,
+  },
 };
 
 let state = loadState();
@@ -77,7 +87,33 @@ const refs = {
   dashboardTrendSvg: $("#dashboardTrendSvg"),
   dashboardTrendLabels: $("#dashboardTrendLabels"),
   dashboardTypes: $("#dashboardTypes"),
+  dashboardTags: $("#dashboardTags"),
   logList: $("#logList"),
+  quickTagList: $("#quickTagList"),
+  goalMode: $("#goalMode"),
+  weeklyGoal: $("#weeklyGoal"),
+  dryDaysGoal: $("#dryDaysGoal"),
+  goalFeedback: $("#goalFeedback"),
+  discreetMode: $("#discreetMode"),
+  privacyNote: $("#privacyNote"),
+  importStatus: $("#importStatus"),
+  updateBanner: $("#updateBanner"),
+  reloadButton: $("#reloadButton"),
+  editDialog: $("#editDialog"),
+  editForm: $("#editForm"),
+  editId: $("#editId"),
+  editKind: $("#editKind"),
+  editKindLabel: $("#editKindLabel"),
+  editDate: $("#editDate"),
+  editTime: $("#editTime"),
+  editPreset: $("#editPreset"),
+  editBeerMl: $("#editBeerMl"),
+  editBeerAbv: $("#editBeerAbv"),
+  editPiconMl: $("#editPiconMl"),
+  editPiconAbv: $("#editPiconAbv"),
+  editTagList: $("#editTagList"),
+  deleteEditButton: $("#deleteEditButton"),
+  saveEditButton: $("#saveEditButton"),
   beerMl: $("#beerMl"),
   beerAbv: $("#beerAbv"),
   piconMl: $("#piconMl"),
@@ -95,8 +131,10 @@ init();
 
 function init() {
   buildBubbles();
+  buildTagControls();
   bindEvents();
   syncRecipeForm();
+  syncSettingsForm();
   setView(state.activeView);
   render();
   registerServiceWorker();
@@ -110,6 +148,19 @@ function bindEvents() {
   $("#exportButton").addEventListener("click", exportData);
   $("#importInput").addEventListener("change", importData);
   $("#resetButton").addEventListener("click", resetAll);
+  refs.goalMode.addEventListener("change", updateSettingsFromForm);
+  refs.weeklyGoal.addEventListener("input", updateSettingsFromForm);
+  refs.dryDaysGoal.addEventListener("input", updateSettingsFromForm);
+  refs.discreetMode.addEventListener("change", updateSettingsFromForm);
+  refs.reloadButton.addEventListener("click", () => {
+    navigator.serviceWorker.getRegistration().then((registration) => {
+      if (registration?.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
+      else window.location.reload();
+    });
+  });
+  refs.editPreset.addEventListener("change", syncEditRecipePreset);
+  refs.saveEditButton.addEventListener("click", saveEditedItem);
+  refs.deleteEditButton.addEventListener("click", deleteEditedItem);
 
   $$(".tab").forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
@@ -141,19 +192,29 @@ function bindEvents() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object") return cloneDefaultState();
-
-    return {
-      ...cloneDefaultState(),
-      ...saved,
-      recipe: normalizeRecipe(saved.recipe),
-      flagsByDate: saved.flagsByDate || {},
-      entries: Array.isArray(saved.entries) ? saved.entries : [],
-      waters: Array.isArray(saved.waters) ? saved.waters : [],
-    };
+    return migrateState(saved);
   } catch {
     return cloneDefaultState();
   }
+}
+
+function migrateState(saved) {
+  if (!saved || typeof saved !== "object") return cloneDefaultState();
+
+  const base = cloneDefaultState();
+  const migrated = {
+    ...base,
+    ...saved,
+    schemaVersion: SCHEMA_VERSION,
+    recipe: normalizeRecipe(saved.recipe),
+    flagsByDate: isPlainObject(saved.flagsByDate) ? saved.flagsByDate : {},
+    entries: Array.isArray(saved.entries) ? saved.entries.map(normalizeEntry).filter(Boolean) : [],
+    waters: Array.isArray(saved.waters) ? saved.waters.map(normalizeWater).filter(Boolean) : [],
+    selectedTags: Array.isArray(saved.selectedTags) ? sanitizeTags(saved.selectedTags) : [],
+    settings: normalizeSettings(saved.settings),
+  };
+
+  return migrated;
 }
 
 function cloneDefaultState() {
@@ -161,7 +222,12 @@ function cloneDefaultState() {
 }
 
 function saveState() {
+  state.schemaVersion = SCHEMA_VERSION;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function isPlainObject(value) {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
 function todayKey() {
@@ -218,6 +284,7 @@ function addPicon() {
     recipe,
     standardDrinks: recipeStandardDrinks(recipe),
     grams: recipeAlcoholGrams(recipe),
+    tags: sanitizeTags(state.selectedTags),
   });
   saveState();
   render();
@@ -243,7 +310,7 @@ function addWater() {
 
 function clearToday() {
   const key = todayKey();
-  if (!confirm("Effacer les Picon-bières et verres d'eau d'aujourd'hui ?")) return;
+  if (!confirm("Effacer les entrées alcoolisées et verres d'eau d'aujourd'hui ?")) return;
   state.entries = state.entries.filter((entry) => entry.date !== key);
   state.waters = state.waters.filter((entry) => entry.date !== key);
   saveState();
@@ -350,19 +417,20 @@ function render() {
 
   refs.todayDate.textContent = formatDay(key, { weekday: "long", day: "numeric", month: "long" });
   refs.todayPicons.textContent = today.count;
-  refs.piconLabel.textContent = today.count > 1 ? "Picons" : "Picon";
+  const noun = entryNoun(today.count);
+  refs.piconLabel.textContent = noun.counter;
   refs.standardLine.textContent = `${formatNumber(today.standardDrinks)} verre standard`;
   refs.selectedPiconLine.textContent = recipeDisplayName(state.recipe);
   refs.todayStandards.textContent = formatNumber(today.standardDrinks);
   refs.perPiconLine.textContent = `1 ${recipeDisplayName(state.recipe)} = ${formatNumber(perPicon)} verre standard`;
   refs.waterCount.textContent = today.waterCount;
   refs.waterLine.textContent = today.waterCount > 1 ? "Verres d'eau notés" : "Verre d'eau noté";
-  refs.dryDays.textContent = `${week.dryDays}/${DRY_DAYS_TARGET}`;
+  refs.dryDays.textContent = `${week.dryDays}/${getDryDaysGoal()}`;
 
   $("#removeButton").disabled = today.count === 0;
 
   const dailyPercent = (today.standardDrinks / DAILY_LIMIT) * 100;
-  const weeklyPercent = (week.standardDrinks / WEEKLY_LIMIT) * 100;
+  const weeklyPercent = (week.standardDrinks / getWeeklyGoal()) * 100;
   const intensity = clamp(Math.max(dailyPercent, weeklyPercent) / 100, 0, 1.6);
   const overLimit = clamp(intensity - 1, 0, 0.6);
   document.body.style.setProperty("--intensity", intensity.toFixed(2));
@@ -372,7 +440,7 @@ function render() {
   refs.dailyMeter.style.width = `${clamp(dailyPercent, 0, 100)}%`;
   refs.weeklyMeter.style.width = `${clamp(weeklyPercent, 0, 100)}%`;
   refs.dailyMeterLabel.textContent = `${formatNumber(today.standardDrinks)} / ${DAILY_LIMIT}`;
-  refs.weeklyMeterLabel.textContent = `${formatNumber(week.standardDrinks)} / ${WEEKLY_LIMIT}`;
+  refs.weeklyMeterLabel.textContent = `${formatNumber(week.standardDrinks)} / ${getWeeklyGoal()}`;
 
   const weeklyFill = week.standardDrinks === 0 ? 0 : clamp((week.standardDrinks / WEEKLY_LIMIT) * 86 + 10, 10, 96);
   document.documentElement.style.setProperty("--fill", `${weeklyFill}%`);
@@ -385,6 +453,8 @@ function render() {
   renderWeek(week);
   renderLog();
   renderRecipe();
+  renderObjective(today, week);
+  renderDiscreetMode();
 }
 
 function renderStatus(today, week) {
@@ -393,21 +463,21 @@ function renderStatus(today, week) {
   if (today.standardDrinks >= DAILY_LIMIT) {
     refs.statusDot.classList.add("danger");
     refs.statusTitle.textContent = today.standardDrinks > DAILY_LIMIT ? "Au-dessus du repère jour" : "Seuil journalier atteint";
-    refs.statusText.textContent = `Aujourd'hui : ${formatNumber(today.standardDrinks)} verres standard pour un repère de ${DAILY_LIMIT}. L'abus d'alcool est dangereux : pause et eau recommandées.`;
+    refs.statusText.textContent = `Aujourd'hui : ${formatNumber(today.standardDrinks)} verres standard pour un repère de ${DAILY_LIMIT}. Faire une pause est le signal principal ; l’eau ne compense pas l’alcool.`;
     return;
   }
 
   if (week.standardDrinks >= WEEKLY_LIMIT) {
     refs.statusDot.classList.add("danger");
     refs.statusTitle.textContent = week.standardDrinks > WEEKLY_LIMIT ? "Au-dessus du repère semaine" : "Seuil hebdomadaire atteint";
-    refs.statusText.textContent = `Semaine : ${formatNumber(week.standardDrinks)} verres standard pour un repère de ${WEEKLY_LIMIT}. Ralentis le rythme.`;
+    refs.statusText.textContent = `Semaine : ${formatNumber(week.standardDrinks)} verres standard pour un repère de ${WEEKLY_LIMIT}. Le repère est atteint ou dépassé.`;
     return;
   }
 
   if (today.standardDrinks > 0) {
     refs.statusDot.classList.add("warn");
     refs.statusTitle.textContent = "Dans le repère jour";
-    refs.statusText.textContent = "Le repère français reste aussi : pas tous les jours.";
+    refs.statusText.textContent = "Suivi indicatif : les repères incluent aussi des jours sans alcool.";
     return;
   }
 
@@ -417,8 +487,8 @@ function renderStatus(today, week) {
 
 function renderRhythm(today) {
   if (today.count === 0) {
-    refs.rhythmTitle.textContent = "Rien au compteur";
-    refs.rhythmText.textContent = "Aucun Picon-bière ajouté aujourd'hui.";
+    refs.rhythmTitle.textContent = "Aucune entrée aujourd’hui";
+    refs.rhythmText.textContent = "La journée est suivie sans ajout d’alcool pour le moment.";
     return;
   }
 
@@ -426,11 +496,11 @@ function renderRhythm(today) {
   const lastTime = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(new Date(last.time));
   const waterGap = Math.max(0, today.count - today.waterCount);
 
-  refs.rhythmTitle.textContent = `${today.count} Picon-bière${today.count > 1 ? "s" : ""}`;
+  refs.rhythmTitle.textContent = `${today.count} ${entryNoun(today.count).log}`;
   refs.rhythmText.textContent =
     waterGap > 0
-      ? `Dernier à ${lastTime}. Eau alternée manquante : ${waterGap}.`
-      : `Dernier à ${lastTime}. Alternance avec eau respectée.`;
+      ? `Dernière entrée à ${lastTime}. ${waterGap} entrée${waterGap > 1 ? "s" : ""} sans verre d’eau noté.`
+      : `Dernière entrée à ${lastTime}. L’eau est notée comme pause, sans compenser l’alcool.`;
 }
 
 function recipeDisplayName(recipe) {
@@ -447,8 +517,8 @@ function renderWeekMarkers(week) {
   const max = Math.max(DAILY_LIMIT, ...week.days.map((day) => day.standardDrinks));
   const activeDays = week.days.filter((day) => day.standardDrinks > 0).length;
   refs.visualCaption.textContent = activeDays === 0
-    ? "Aucun jour avec Picon-bière cette semaine."
-    : `${activeDays} jour${activeDays > 1 ? "s" : ""} avec Picon-bière cette semaine.`;
+    ? "Aucun jour avec alcool noté cette semaine."
+    : `${activeDays} jour${activeDays > 1 ? "s" : ""} avec entrée alcoolisée cette semaine.`;
 
   week.days.forEach((day, index) => {
     const marker = document.createElement("span");
@@ -466,7 +536,7 @@ function renderWeekMarkers(week) {
 function renderWeek(week) {
   refs.weekRange.textContent = `${formatDay(week.days[0].date, { day: "numeric", month: "short" })} - ${formatDay(week.days[6].date, { day: "numeric", month: "short" })}`;
   refs.weekTotal.textContent = formatNumber(week.standardDrinks);
-  refs.weeklyStatus.textContent = `${formatNumber(week.standardDrinks)}/${WEEKLY_LIMIT}`;
+  refs.weeklyStatus.textContent = `${formatNumber(week.standardDrinks)}/${getWeeklyGoal()}`;
   refs.weeklyPause.textContent = `${week.dryDays} jour${week.dryDays > 1 ? "s" : ""}`;
   refs.weekBars.innerHTML = "";
 
@@ -501,7 +571,7 @@ function renderDashboard(today, week) {
   const piconCount = range.reduce((sum, day) => sum + day.count, 0);
   const waterCount = range.reduce((sum, day) => sum + day.waterCount, 0);
   const pace = piconCount === 0 ? 0 : Math.round(clamp((waterCount / piconCount) * 100, 0, 100));
-  const weekPercent = clamp((week.standardDrinks / WEEKLY_LIMIT) * 100, 0, 140);
+  const weekPercent = clamp((week.standardDrinks / getWeeklyGoal()) * 100, 0, 140);
   const dryStreak = countDryStreak(30);
 
   refs.dashboardGauge.style.setProperty("--gauge", `${clamp(weekPercent, 0, 100) * 3.6}deg`);
@@ -513,7 +583,7 @@ function renderDashboard(today, week) {
   refs.dashboardPace.textContent = `${pace}%`;
 
   if (week.standardDrinks >= WEEKLY_LIMIT) {
-    refs.dashboardInsightTitle.textContent = "Signal rouge";
+    refs.dashboardInsightTitle.textContent = "Repère hebdomadaire atteint";
     refs.dashboardInsight.textContent = `La semaine est à ${formatNumber(week.standardDrinks)} verres standard, au-dessus du repère de ${WEEKLY_LIMIT}.`;
   } else if (today.standardDrinks > DAILY_LIMIT) {
     refs.dashboardInsightTitle.textContent = "Pic journalier";
@@ -522,12 +592,13 @@ function renderDashboard(today, week) {
     refs.dashboardInsightTitle.textContent = "Pause à programmer";
     refs.dashboardInsight.textContent = `Il manque ${DRY_DAYS_TARGET - week.dryDays} jour sans alcool pour atteindre le repère hebdomadaire.`;
   } else {
-    refs.dashboardInsightTitle.textContent = "Radar stable";
+    refs.dashboardInsightTitle.textContent = "Suivi dans les repères";
     refs.dashboardInsight.textContent = `Semaine à ${formatNumber(week.standardDrinks)} verres standard avec ${week.dryDays} jour${week.dryDays > 1 ? "s" : ""} à zéro.`;
   }
 
   renderTrend(range);
   renderTypeDistribution(range);
+  renderTagSummary(range);
 }
 
 function renderTrend(days) {
@@ -611,29 +682,59 @@ function renderLog() {
   if (days.length === 0) {
     const empty = document.createElement("p");
     empty.className = "empty-state";
-    empty.textContent = "Aucun Picon-bière enregistré.";
+    empty.textContent = "Aucune entrée enregistrée.";
     refs.logList.append(empty);
     return;
   }
 
   days.forEach((key) => {
     const day = aggregateDay(key);
-    const row = document.createElement("article");
-    row.className = "log-item framed-row";
+    const article = document.createElement("article");
+    article.className = "log-day framed-row";
 
-    const text = document.createElement("div");
+    const summary = document.createElement("div");
+    summary.className = "log-day-summary";
     const title = document.createElement("strong");
     title.textContent = formatDay(key, { weekday: "long", day: "numeric", month: "long" });
     const detail = document.createElement("small");
-    detail.textContent = `${day.count} Picon, ${formatNumber(day.standardDrinks)} verre standard, ${day.waterCount} eau, ${dominantType(day)}`;
-    text.append(title, detail);
+    detail.textContent = `${day.count} ${entryNoun(day.count).short}, ${formatNumber(day.standardDrinks)} verre standard, ${day.waterCount} eau, ${dominantType(day)}`;
+    summary.append(title, detail);
 
-    const pill = document.createElement("span");
-    pill.className = "log-pill";
-    pill.textContent = `${formatNumber(day.standardDrinks)}`;
-    row.append(text, pill);
-    refs.logList.append(row);
+    const list = document.createElement("div");
+    list.className = "entry-list";
+
+    [...day.entries.map((item) => ({ ...item, kind: "entry" })), ...day.waters.map((item) => ({ ...item, kind: "water" }))]
+      .sort((a, b) => new Date(a.time) - new Date(b.time))
+      .forEach((item) => list.append(createLogDetailRow(item)));
+
+    article.append(summary, list);
+    refs.logList.append(article);
   });
+}
+
+function createLogDetailRow(item) {
+  const row = document.createElement("div");
+  row.className = "entry-row";
+
+  const main = document.createElement("div");
+  const label = document.createElement("strong");
+  const time = item.time ? new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(new Date(item.time)) : "--:--";
+  label.textContent = item.kind === "water" ? `Eau · ${time}` : `${recipeDisplayName(item.recipe)} · ${time}`;
+  const detail = document.createElement("small");
+  detail.textContent = item.kind === "water"
+    ? "Verre d’eau noté (ne compense pas l’alcool)."
+    : `${formatNumber(Number(item.standardDrinks || 0))} verre standard · ${formatNumber(Number(item.grams || 0))} g${item.tags?.length ? ` · ${item.tags.join(", ")}` : ""}`;
+  main.append(label, detail);
+
+  const button = document.createElement("button");
+  button.className = "text-button";
+  button.type = "button";
+  button.textContent = "Modifier";
+  button.setAttribute("aria-label", `Modifier ${item.kind === "water" ? "ce verre d’eau" : "cette entrée"}`);
+  button.addEventListener("click", () => openEditDialog(item.kind, item.id));
+
+  row.append(main, button);
+  return row;
 }
 
 function renderRecipe() {
@@ -657,8 +758,8 @@ function renderPresetState() {
 function aggregateDay(key) {
   const entries = state.entries.filter((entry) => entry.date === key);
   const waters = state.waters.filter((entry) => entry.date === key);
-  const standardDrinks = entries.reduce((total, entry) => total + Number(entry.standardDrinks || 0), 0);
-  const grams = entries.reduce((total, entry) => total + Number(entry.grams || 0), 0);
+  const standardDrinks = entries.reduce((total, entry) => total + entryStandardDrinks(entry), 0);
+  const grams = entries.reduce((total, entry) => total + entryGrams(entry), 0);
 
   return {
     date: key,
@@ -771,7 +872,7 @@ function buildBubbles() {
 }
 
 function exportData() {
-  const payload = JSON.stringify({ ...state, exportedAt: new Date().toISOString() }, null, 2);
+  const payload = JSON.stringify({ ...state, schemaVersion: SCHEMA_VERSION, exportedAt: new Date().toISOString() }, null, 2);
   const blob = new Blob([payload], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -781,6 +882,7 @@ function exportData() {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+  setImportStatus("Export local créé. Conserve le fichier dans un endroit sûr.");
 }
 
 function importData(event) {
@@ -791,19 +893,19 @@ function importData(event) {
   reader.addEventListener("load", () => {
     try {
       const imported = JSON.parse(String(reader.result));
-      state = {
-        ...cloneDefaultState(),
-        ...imported,
-        recipe: normalizeRecipe(imported.recipe || PRESETS.demi),
-        entries: Array.isArray(imported.entries) ? imported.entries : [],
-        waters: Array.isArray(imported.waters) ? imported.waters : [],
-        flagsByDate: imported.flagsByDate || {},
-      };
+      const result = validateImportedState(imported);
+      if (!result.valid) {
+        setImportStatus(result.message, true);
+        return;
+      }
+      state = result.state;
       syncRecipeForm();
+      syncSettingsForm();
       saveState();
       render();
+      setImportStatus(result.message);
     } catch {
-      alert("Import JSON invalide.");
+      setImportStatus("Import impossible : le fichier n’est pas un JSON valide.", true);
     } finally {
       event.target.value = "";
     }
@@ -811,10 +913,343 @@ function importData(event) {
   reader.readAsText(file);
 }
 
+function validateImportedState(imported) {
+  if (!isPlainObject(imported)) {
+    return { valid: false, message: "Import refusé : structure JSON attendue sous forme d’objet." };
+  }
+
+  const entriesSource = Array.isArray(imported.entries) ? imported.entries : [];
+  const watersSource = Array.isArray(imported.waters) ? imported.waters : [];
+  const entries = entriesSource.map(normalizeEntry).filter(Boolean);
+  const waters = watersSource.map(normalizeWater).filter(Boolean);
+
+  if (!Array.isArray(imported.entries) && !Array.isArray(imported.waters)) {
+    return { valid: false, message: "Import refusé : aucune liste entries ou waters exploitable." };
+  }
+
+  return {
+    valid: true,
+    state: {
+      ...cloneDefaultState(),
+      ...imported,
+      schemaVersion: SCHEMA_VERSION,
+      recipe: normalizeRecipe(imported.recipe || PRESETS.demi),
+      entries,
+      waters,
+      flagsByDate: isPlainObject(imported.flagsByDate) ? imported.flagsByDate : {},
+      selectedTags: Array.isArray(imported.selectedTags) ? sanitizeTags(imported.selectedTags) : [],
+      settings: normalizeSettings(imported.settings),
+    },
+    message: `Import terminé : ${entries.length}/${entriesSource.length} entrée(s) et ${waters.length}/${watersSource.length} verre(s) d’eau conservés. Les éléments invalides ont été ignorés.`,
+  };
+}
+
+function setImportStatus(message, isError = false) {
+  if (!refs.importStatus) return;
+  refs.importStatus.textContent = message;
+  refs.importStatus.classList.toggle("error", isError);
+}
+
+function normalizeEntry(entry) {
+  if (!isPlainObject(entry)) return null;
+  const date = isValidDateKey(entry.date) ? entry.date : dateKeyFromTime(entry.time);
+  const time = normalizeTime(entry.time, date);
+  if (!date || !time) return null;
+  const recipe = normalizeRecipe(entry.recipe || entry);
+  const grams = recipeAlcoholGrams(recipe);
+  return {
+    ...entry,
+    id: entry.id ? String(entry.id) : createId(),
+    date,
+    time,
+    recipe,
+    standardDrinks: grams / STANDARD_GRAMS,
+    grams,
+    tags: sanitizeTags(entry.tags),
+  };
+}
+
+function normalizeWater(water) {
+  if (!isPlainObject(water)) return null;
+  const date = isValidDateKey(water.date) ? water.date : dateKeyFromTime(water.time);
+  const time = normalizeTime(water.time, date);
+  if (!date || !time) return null;
+  return { ...water, id: water.id ? String(water.id) : createId(), date, time };
+}
+
+function normalizeTime(value, fallbackDate) {
+  const parsed = value ? new Date(value) : null;
+  if (parsed && !Number.isNaN(parsed.getTime())) return parsed.toISOString();
+  if (!isValidDateKey(fallbackDate)) return null;
+  return `${fallbackDate}T12:00:00.000Z`;
+}
+
+function dateKeyFromTime(value) {
+  const parsed = value ? new Date(value) : null;
+  return parsed && !Number.isNaN(parsed.getTime()) ? dateKey(parsed) : null;
+}
+
+function isValidDateKey(value) {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(dateFromKey(value).getTime());
+}
+
+function entryGrams(entry) {
+  return Number.isFinite(Number(entry.grams)) ? Number(entry.grams) : recipeAlcoholGrams(normalizeRecipe(entry.recipe));
+}
+
+function entryStandardDrinks(entry) {
+  return Number.isFinite(Number(entry.standardDrinks)) ? Number(entry.standardDrinks) : entryGrams(entry) / STANDARD_GRAMS;
+}
+
+function sanitizeTags(tags) {
+  if (!Array.isArray(tags)) return [];
+  return [...new Set(tags.map((tag) => String(tag).trim()).filter((tag) => CONTEXT_TAGS.includes(tag)))];
+}
+
+function normalizeSettings(settings = {}) {
+  const base = cloneDefaultState().settings;
+  const goalMode = ["observe", "reduce", "pause"].includes(settings.goalMode) ? settings.goalMode : base.goalMode;
+  return {
+    discreetMode: Boolean(settings.discreetMode),
+    goalMode,
+    weeklyGoal: clamp(Number(settings.weeklyGoal ?? base.weeklyGoal) || base.weeklyGoal, 0.5, WEEKLY_LIMIT),
+    dryDaysGoal: Math.round(clamp(Number(settings.dryDaysGoal ?? base.dryDaysGoal) || base.dryDaysGoal, 0, 7)),
+  };
+}
+
+function buildTagControls() {
+  renderTagCheckboxes(refs.quickTagList, state.selectedTags, (tags) => {
+    state.selectedTags = tags;
+    saveState();
+  });
+  renderTagCheckboxes(refs.editTagList, [], () => {});
+}
+
+function renderTagCheckboxes(container, selected, onChange) {
+  if (!container) return;
+  container.innerHTML = "";
+  CONTEXT_TAGS.forEach((tag) => {
+    const label = document.createElement("label");
+    label.className = "tag-choice";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = tag;
+    input.checked = selected.includes(tag);
+    input.addEventListener("change", () => onChange(getCheckedTags(container)));
+    label.append(input, document.createTextNode(tag));
+    container.append(label);
+  });
+}
+
+function getCheckedTags(container) {
+  return sanitizeTags(Array.from(container.querySelectorAll("input:checked")).map((input) => input.value));
+}
+
+function syncSettingsForm() {
+  state.settings = normalizeSettings(state.settings);
+  refs.goalMode.value = state.settings.goalMode;
+  refs.weeklyGoal.value = state.settings.weeklyGoal;
+  refs.dryDaysGoal.value = state.settings.dryDaysGoal;
+  refs.discreetMode.checked = state.settings.discreetMode;
+}
+
+function updateSettingsFromForm() {
+  state.settings = normalizeSettings({
+    discreetMode: refs.discreetMode.checked,
+    goalMode: refs.goalMode.value,
+    weeklyGoal: refs.weeklyGoal.value,
+    dryDaysGoal: refs.dryDaysGoal.value,
+  });
+  syncSettingsForm();
+  saveState();
+  render();
+}
+
+function getWeeklyGoal() {
+  return normalizeSettings(state.settings).weeklyGoal;
+}
+
+function getDryDaysGoal() {
+  return normalizeSettings(state.settings).dryDaysGoal;
+}
+
+function renderObjective(today, week) {
+  const settings = normalizeSettings(state.settings);
+  let text = "Mode Observer : simple suivi personnel, sans cible de réduction.";
+  if (settings.goalMode === "reduce") {
+    const remaining = settings.weeklyGoal - week.standardDrinks;
+    text = remaining >= 0
+      ? `Mode Réduire : ${formatNumber(remaining)} verre standard avant la cible personnelle de ${formatNumber(settings.weeklyGoal)} cette semaine.`
+      : `Mode Réduire : cible personnelle de ${formatNumber(settings.weeklyGoal)} dépassée cette semaine.`;
+  }
+  if (settings.goalMode === "pause") {
+    const missing = settings.dryDaysGoal - week.dryDays;
+    text = missing > 0
+      ? `Mode Pause : encore ${missing} jour${missing > 1 ? "s" : ""} sans alcool pour la cible personnelle.`
+      : `Mode Pause : cible personnelle de jours sans alcool atteinte cette semaine.`;
+  }
+  refs.goalFeedback.textContent = text;
+}
+
+function renderDiscreetMode() {
+  const discreet = Boolean(state.settings?.discreetMode);
+  document.body.classList.toggle("discreet-mode", discreet);
+  document.querySelectorAll("[data-copy='app-title']").forEach((node) => { node.textContent = discreet ? "Journal" : "Picon Counter"; });
+  document.querySelectorAll("[data-copy='add-entry']").forEach((node) => { node.textContent = discreet ? "Entrée" : "Picon"; });
+  document.querySelectorAll("[data-copy='formats-title']").forEach((node) => { node.textContent = discreet ? "Formats" : "Formats Picon"; });
+  document.querySelectorAll("[data-aria-copy='app-title']").forEach((node) => { node.setAttribute("aria-label", discreet ? "Journal" : "Picon Counter"); });
+  refs.privacyNote.textContent = "Données conservées uniquement dans le stockage local de ce navigateur : rien n’est envoyé à un serveur.";
+}
+
+function entryNoun(count = 1) {
+  const discreet = Boolean(state.settings?.discreetMode);
+  if (discreet) return { counter: count > 1 ? "entrées" : "entrée", log: `entrée${count > 1 ? "s" : ""}`, short: "entrée" };
+  return { counter: count > 1 ? "Picons" : "Picon", log: `Picon-bière${count > 1 ? "s" : ""}`, short: "Picon" };
+}
+
+function renderTagSummary(days) {
+  refs.dashboardTags.innerHTML = "";
+  const counts = new Map();
+  days.flatMap((day) => day.entries).forEach((entry) => sanitizeTags(entry.tags).forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1)));
+  if (counts.size === 0) {
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = "Aucun tag optionnel noté sur 14 jours.";
+    refs.dashboardTags.append(empty);
+    return;
+  }
+  const max = Math.max(...counts.values());
+  [...counts.entries()].sort((a, b) => b[1] - a[1]).forEach(([tag, count]) => {
+    const row = document.createElement("div");
+    row.className = "type-row framed-row";
+    row.innerHTML = `<span>${tag}</span><div class="type-track"><i style="width: ${clamp((count / max) * 100, 8, 100)}%"></i></div><strong>${count}</strong>`;
+    refs.dashboardTags.append(row);
+  });
+}
+
+function openEditDialog(kind, id) {
+  const collection = kind === "water" ? state.waters : state.entries;
+  const item = collection.find((entry) => entry.id === id);
+  if (!item) return;
+  refs.editId.value = id;
+  refs.editKind.value = kind;
+  refs.editKindLabel.textContent = kind === "water" ? "Verre d’eau" : "Entrée";
+  refs.editTitle.textContent = kind === "water" ? "Modifier un verre d’eau" : "Modifier une entrée";
+  refs.editDate.value = item.date;
+  refs.editTime.value = isoToTimeInput(item.time);
+  document.querySelectorAll(".entry-only").forEach((node) => { node.hidden = kind === "water"; });
+  if (kind !== "water") {
+    const recipe = normalizeRecipe(item.recipe);
+    refs.editPreset.value = PRESETS[recipe.key] ? recipe.key : "custom";
+    fillEditRecipe(recipe);
+    renderTagCheckboxes(refs.editTagList, sanitizeTags(item.tags), () => {});
+  }
+  refs.editDialog.showModal();
+}
+
+function isoToTimeInput(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "12:00";
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
+function syncEditRecipePreset() {
+  const preset = PRESETS[refs.editPreset.value];
+  if (preset) fillEditRecipe(preset);
+}
+
+function fillEditRecipe(recipe) {
+  refs.editBeerMl.value = recipe.beerMl;
+  refs.editBeerAbv.value = recipe.beerAbv;
+  refs.editPiconMl.value = recipe.piconMl;
+  refs.editPiconAbv.value = recipe.piconAbv;
+}
+
+function saveEditedItem() {
+  const id = refs.editId.value;
+  const kind = refs.editKind.value;
+  const date = refs.editDate.value;
+  const time = refs.editTime.value;
+  if (!isValidDateKey(date) || !time) return;
+  const iso = localDateTimeToIso(date, time);
+
+  if (kind === "water") {
+    state.waters = state.waters.map((water) => water.id === id ? { ...water, date, time: iso } : water);
+  } else {
+    const recipe = sanitizeRecipe({
+      key: refs.editPreset.value,
+      name: refs.editPreset.value === "custom" ? "Perso" : PRESETS[refs.editPreset.value]?.name,
+      beerMl: refs.editBeerMl.value,
+      beerAbv: refs.editBeerAbv.value,
+      piconMl: refs.editPiconMl.value,
+      piconAbv: refs.editPiconAbv.value,
+    });
+    const grams = recipeAlcoholGrams(recipe);
+    state.entries = state.entries.map((entry) => entry.id === id ? {
+      ...entry,
+      date,
+      time: iso,
+      recipe,
+      grams,
+      standardDrinks: grams / STANDARD_GRAMS,
+      tags: getCheckedTags(refs.editTagList),
+    } : entry);
+  }
+  refs.editDialog.close();
+  saveState();
+  render();
+}
+
+function deleteEditedItem() {
+  const id = refs.editId.value;
+  const kind = refs.editKind.value;
+  const label = kind === "water" ? "ce verre d’eau" : "cette entrée";
+  if (!confirm(`Supprimer ${label} du journal local ?`)) return;
+  if (kind === "water") state.waters = state.waters.filter((water) => water.id !== id);
+  else state.entries = state.entries.filter((entry) => entry.id !== id);
+  refs.editDialog.close();
+  saveState();
+  render();
+}
+
+function localDateTimeToIso(date, time) {
+  return new Date(`${date}T${time}:00`).toISOString();
+}
+
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
 
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloading) return;
+    reloading = true;
+    window.location.reload();
   });
+
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").then((registration) => {
+      registration.addEventListener("updatefound", () => {
+        const worker = registration.installing;
+        if (!worker) return;
+        worker.addEventListener("statechange", () => {
+          if (worker.state === "installed" && navigator.serviceWorker.controller) {
+            refs.updateBanner.hidden = false;
+          }
+        });
+      });
+    }).catch(() => {});
+  });
+}
+
+if (typeof window !== "undefined") {
+  window.PiconCounterTests = {
+    recipeAlcoholGrams,
+    recipeStandardDrinks,
+    aggregateDay,
+    aggregateWeek,
+    validateImportedState,
+    PRESETS,
+    setTestState(nextState) { state = migrateState(nextState); },
+    getState() { return state; },
+  };
 }

@@ -13,10 +13,10 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <a class="brand" href="#today" aria-label="Picon Counter">
+        <a class="brand" href="#today" aria-label="Picon Counter" data-aria-copy="app-title">
           <span class="brand-mark" aria-hidden="true">PC</span>
           <span>
-            <strong>Picon Counter</strong>
+            <strong data-copy="app-title">Picon Counter</strong>
             <small id="todayDate">Aujourd'hui</small>
           </span>
         </a>
@@ -33,7 +33,7 @@
           <p class="counter-subline"><span id="standardLine">0 verre standard</span> · <span id="selectedPiconLine">Demi</span></p>
 
           <div class="hero-actions" aria-label="Actions compteur">
-            <button class="icon-button ghost" id="removeButton" type="button" aria-label="Retirer le dernier Picon">
+            <button class="icon-button ghost" id="removeButton" type="button" aria-label="Retirer la dernière entrée">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 12h14" />
               </svg>
@@ -42,7 +42,7 @@
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              <span>Picon</span>
+              <span data-copy="add-entry">Picon</span>
             </button>
             <button class="icon-button ghost" id="waterButton" type="button" aria-label="Marquer un verre d'eau">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -51,12 +51,17 @@
             </button>
           </div>
 
-          <div class="format-strip" aria-label="Choix du Picon">
+          <div class="format-strip" aria-label="Choix du format">
             <button class="preset active" type="button" data-preset="demi">Demi</button>
             <button class="preset" type="button" data-preset="pinte">Pinte</button>
             <button class="preset" type="button" data-preset="leger">Léger</button>
             <button class="preset" type="button" data-preset="schwartz">Shwartz</button>
           </div>
+
+          <details class="quick-tags">
+            <summary>Contexte optionnel</summary>
+            <div class="tag-grid" id="quickTagList" aria-label="Tags de contexte pour la prochaine entrée"></div>
+          </details>
 
           <div class="meter-row">
             <span>Jour</span>
@@ -90,8 +95,8 @@
             </div>
           </div>
           <div class="threshold-alert" id="thresholdAlert" role="status" aria-live="assertive" aria-hidden="true">
-            <strong>Seuil atteint</strong>
-            <span>Le repère est franchi : ralentis, hydrate-toi, fais une pause.</span>
+            <strong>Repère atteint</strong>
+            <span>Le repère est atteint : faire une pause est prioritaire. L’eau ne compense pas l’alcool.</span>
           </div>
           <div class="glass-shadow" aria-hidden="true"></div>
         </div>
@@ -102,8 +107,46 @@
           <span class="status-dot" id="statusDot"></span>
           <strong id="statusTitle">Journée à zéro</strong>
         </div>
-        <p id="statusText">Repère français : maximum 2 verres standard par jour, et pas tous les jours.</p>
+        <p id="statusText">Repère français : maximum 2 verres standard par jour, 10 par semaine, avec des jours sans alcool.</p>
       </section>
+
+      <section class="panel objective-panel" aria-labelledby="objectiveTitle">
+        <div class="panel-heading compact-heading">
+          <div>
+            <span class="panel-label">Objectif personnel</span>
+            <h2 id="objectiveTitle">Suivi sans encouragement</h2>
+          </div>
+          <label class="switch-line">
+            <input id="discreetMode" type="checkbox" />
+            <span>Mode discret</span>
+          </label>
+        </div>
+        <div class="objective-grid">
+          <label>
+            Mode
+            <select id="goalMode">
+              <option value="observe">Observer</option>
+              <option value="reduce">Réduire</option>
+              <option value="pause">Pause</option>
+            </select>
+          </label>
+          <label>
+            Cible semaine
+            <input id="weeklyGoal" type="number" min="0" max="10" step="0.5" inputmode="decimal" />
+          </label>
+          <label>
+            Jours sans alcool
+            <input id="dryDaysGoal" type="number" min="0" max="7" step="1" inputmode="numeric" />
+          </label>
+        </div>
+        <p class="privacy-note" id="privacyNote">Données conservées uniquement dans le stockage local de ce navigateur : rien n’est envoyé à un serveur.</p>
+        <p class="objective-feedback" id="goalFeedback">Mode Observer : simple suivi personnel.</p>
+      </section>
+
+      <div class="update-banner" id="updateBanner" role="status" aria-live="polite" hidden>
+        <span>Nouvelle version disponible.</span>
+        <button class="text-button" id="reloadButton" type="button">Mettre à jour</button>
+      </div>
 
       <nav class="tabs" aria-label="Navigation">
         <button class="tab active" type="button" data-view="today">
@@ -202,7 +245,7 @@
           <article class="panel stat-panel">
             <span>Rythme eau</span>
             <strong id="dashboardPace">0%</strong>
-            <small>Picons couverts par un verre d'eau</small>
+            <small>Entrées avec eau notée</small>
           </article>
         </div>
 
@@ -222,10 +265,20 @@
           <div class="panel-heading">
             <div>
               <span class="panel-label">Mosaïque</span>
-              <h2>Formats Picon</h2>
+              <h2 data-copy="formats-title">Formats Picon</h2>
             </div>
           </div>
           <div class="type-bars" id="dashboardTypes"></div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="panel-label">Contexte 14 jours</span>
+              <h2>Tags notés</h2>
+            </div>
+          </div>
+          <div class="type-bars" id="dashboardTags"></div>
         </article>
       </section>
 
@@ -267,6 +320,58 @@
           <div class="log-list" id="logList"></div>
         </article>
 
+        <dialog class="edit-dialog" id="editDialog" aria-labelledby="editTitle">
+          <form method="dialog" class="edit-form" id="editForm">
+            <div class="panel-heading compact-heading">
+              <div>
+                <span class="panel-label" id="editKindLabel">Journal</span>
+                <h2 id="editTitle">Modifier une entrée</h2>
+              </div>
+              <button class="icon-button ghost" value="cancel" type="submit" aria-label="Fermer">×</button>
+            </div>
+            <input id="editId" type="hidden" />
+            <input id="editKind" type="hidden" />
+            <div class="edit-grid">
+              <label>
+                Date
+                <input id="editDate" type="date" required />
+              </label>
+              <label>
+                Heure
+                <input id="editTime" type="time" required />
+              </label>
+              <label class="entry-only">
+                Type
+                <select id="editPreset">
+                  <option value="demi">Demi</option>
+                  <option value="pinte">Pinte</option>
+                  <option value="leger">Léger</option>
+                  <option value="schwartz">Shwartz</option>
+                  <option value="custom">Perso</option>
+                </select>
+              </label>
+            </div>
+            <fieldset class="entry-only mini-fieldset">
+              <legend>Recette associée</legend>
+              <div class="recipe-form compact-recipe">
+                <label>Bière ml<input id="editBeerMl" type="number" min="50" max="1000" step="5" inputmode="decimal" /></label>
+                <label>Bière %<input id="editBeerAbv" type="number" min="0" max="20" step="0.1" inputmode="decimal" /></label>
+                <label>Picon ml<input id="editPiconMl" type="number" min="0" max="120" step="1" inputmode="decimal" /></label>
+                <label>Picon %<input id="editPiconAbv" type="number" min="0" max="45" step="0.1" inputmode="decimal" /></label>
+              </div>
+            </fieldset>
+            <fieldset class="entry-only mini-fieldset">
+              <legend>Tags optionnels</legend>
+              <div class="tag-grid" id="editTagList"></div>
+            </fieldset>
+            <div class="dialog-actions">
+              <button class="text-button danger" id="deleteEditButton" type="button">Supprimer</button>
+              <button class="text-button" value="cancel" type="submit">Annuler</button>
+              <button class="text-button primary" id="saveEditButton" value="default" type="button">Enregistrer</button>
+            </div>
+          </form>
+        </dialog>
+
         <article class="panel data-panel">
           <div>
             <span class="panel-label">Écrin local</span>
@@ -280,6 +385,8 @@
             </label>
             <button class="text-button danger" id="resetButton" type="button">Tout vider</button>
           </div>
+          <p class="import-status" id="importStatus" role="status" aria-live="polite"></p>
+          <p class="privacy-note">Export/import restent locaux au navigateur. Vérifie où tu conserves le fichier JSON exporté.</p>
         </article>
       </section>
 
@@ -321,16 +428,20 @@
           </div>
         </article>
 
-        <article class="panel source-panel legal-panel">
-          <span class="panel-label">Mentions légales & repères français</span>
+        <article class="panel source-panel legal-panel" id="aboutCalculations">
+          <span class="panel-label">À propos des calculs</span>
+          <h2>Suivi indicatif, pas médical</h2>
           <p><strong>L'abus d'alcool est dangereux pour la santé, à consommer avec modération.</strong></p>
-          <p>Un verre standard contient 10 g d'alcool pur. Le repère adulte est de 10 verres standard par semaine, 2 par jour maximum, avec des jours sans alcool.</p>
+          <p>Formule affichée : alcool pur en g = volume en ml × degré alcoolique × 0,789 / 100. Le total additionne la bière et l’amer.</p>
+          <p>Verres standard = alcool pur en g / 10. Ici, 1 verre standard correspond à 10 g d’alcool pur et la densité de l’éthanol utilisée est 0,789.</p>
+          <p>Repères français intégrés : 2 verres standard par jour maximum, 10 par semaine, avec des jours sans alcool. L’eau est un bon réflexe de pause, mais ne compense pas l’alcool consommé.</p>
+          <p>Limites : suivi personnel indicatif, pas un outil médical, pas un calculateur d’alcoolémie et pas un conseil personnalisé.</p>
         </article>
       </section>
 
       <footer class="legal-footer">
         <strong>L'abus d'alcool est dangereux pour la santé.</strong>
-        <span>Application de suivi personnel — à consommer avec modération.</span>
+        <span>Application de suivi personnel local — sobriété des données et modération.</span>
       </footer>
     </main>
 
