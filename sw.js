@@ -1,8 +1,9 @@
-const CACHE_NAME = "picon-counter-v10";
+const CACHE_NAME = "picon-counter-v11";
 const ASSETS = [
   "./",
   "index.html",
   "styles.css",
+  "visual-tuning.css",
   "app.js",
   "manifest.webmanifest",
   "icon.svg",
