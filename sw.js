@@ -1,4 +1,4 @@
-const CACHE_NAME = "picon-counter-v8";
+const CACHE_NAME = "picon-counter-v9";
 const ASSETS = [
   "./",
   "index.html",
@@ -14,7 +14,6 @@ const ASSETS = [
   "assets/brand/og-image.svg",
   "assets/illustrations/empty-today.svg",
   "assets/illustrations/threshold-reached.svg",
-  "assets/illustrations/discreet-mode.svg",
   "assets/icons/context-tags.svg",
   "assets/patterns/art-nouveau-bg.svg",
 ];

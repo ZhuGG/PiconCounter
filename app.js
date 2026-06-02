@@ -35,7 +35,6 @@ const defaultState = {
   activeView: "today",
   selectedTags: [],
   settings: {
-    discreetMode: false,
     goalMode: "observe",
     weeklyGoal: WEEKLY_LIMIT,
     dryDaysGoal: DRY_DAYS_TARGET,
@@ -95,8 +94,7 @@ const refs = {
   weeklyGoal: $("#weeklyGoal"),
   dryDaysGoal: $("#dryDaysGoal"),
   goalFeedback: $("#goalFeedback"),
-  discreetMode: $("#discreetMode"),
-  privacyNote: $("#privacyNote"),
+  condensationLayer: $("#condensationLayer"),
   importStatus: $("#importStatus"),
   updateBanner: $("#updateBanner"),
   reloadButton: $("#reloadButton"),
@@ -132,6 +130,7 @@ init();
 
 function init() {
   buildBubbles();
+  buildCondensation();
   buildTagControls();
   bindEvents();
   syncRecipeForm();
@@ -152,7 +151,6 @@ function bindEvents() {
   refs.goalMode.addEventListener("change", updateSettingsFromForm);
   refs.weeklyGoal.addEventListener("input", updateSettingsFromForm);
   refs.dryDaysGoal.addEventListener("input", updateSettingsFromForm);
-  refs.discreetMode.addEventListener("change", updateSettingsFromForm);
   refs.reloadButton.addEventListener("click", () => {
     navigator.serviceWorker.getRegistration().then((registration) => {
       if (registration?.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
@@ -455,7 +453,6 @@ function render() {
   renderLog();
   renderRecipe();
   renderObjective(today, week);
-  renderDiscreetMode();
 }
 
 function renderStatus(today, week) {
@@ -524,9 +521,7 @@ function renderWeekMarkers(week) {
   if (refs.visualIllustration) {
     refs.visualIllustration.src = reachedLimit
       ? "assets/illustrations/threshold-reached.svg"
-      : state.settings.discreetMode
-        ? "assets/illustrations/discreet-mode.svg"
-        : "assets/illustrations/empty-today.svg";
+      : "assets/illustrations/empty-today.svg";
   }
 
   week.days.forEach((day, index) => {
@@ -880,6 +875,21 @@ function buildBubbles() {
   }
 }
 
+function buildCondensation() {
+  if (!refs.condensationLayer) return;
+  refs.condensationLayer.innerHTML = "";
+  for (let index = 0; index < 24; index += 1) {
+    const drop = document.createElement("span");
+    drop.className = "droplet";
+    drop.style.left = `${10 + Math.random() * 80}%`;
+    drop.style.top = `${8 + Math.random() * 56}%`;
+    drop.style.setProperty("--size", `${2 + Math.random() * 5}px`);
+    drop.style.setProperty("--drop-delay", `${index * -0.22 - Math.random() * 3}s`);
+    drop.style.setProperty("--drop-duration", `${5.5 + Math.random() * 5}s`);
+    refs.condensationLayer.append(drop);
+  }
+}
+
 function exportData() {
   const payload = JSON.stringify({ ...state, schemaVersion: SCHEMA_VERSION, exportedAt: new Date().toISOString() }, null, 2);
   const blob = new Blob([payload], { type: "application/json" });
@@ -1019,7 +1029,6 @@ function normalizeSettings(settings = {}) {
   const base = cloneDefaultState().settings;
   const goalMode = ["observe", "reduce", "pause"].includes(settings.goalMode) ? settings.goalMode : base.goalMode;
   return {
-    discreetMode: Boolean(settings.discreetMode),
     goalMode,
     weeklyGoal: clamp(Number(settings.weeklyGoal ?? base.weeklyGoal) || base.weeklyGoal, 0.5, WEEKLY_LIMIT),
     dryDaysGoal: Math.round(clamp(Number(settings.dryDaysGoal ?? base.dryDaysGoal) || base.dryDaysGoal, 0, 7)),
@@ -1059,12 +1068,10 @@ function syncSettingsForm() {
   refs.goalMode.value = state.settings.goalMode;
   refs.weeklyGoal.value = state.settings.weeklyGoal;
   refs.dryDaysGoal.value = state.settings.dryDaysGoal;
-  refs.discreetMode.checked = state.settings.discreetMode;
 }
 
 function updateSettingsFromForm() {
   state.settings = normalizeSettings({
-    discreetMode: refs.discreetMode.checked,
     goalMode: refs.goalMode.value,
     weeklyGoal: refs.weeklyGoal.value,
     dryDaysGoal: refs.dryDaysGoal.value,
@@ -1100,19 +1107,7 @@ function renderObjective(today, week) {
   refs.goalFeedback.textContent = text;
 }
 
-function renderDiscreetMode() {
-  const discreet = Boolean(state.settings?.discreetMode);
-  document.body.classList.toggle("discreet-mode", discreet);
-  document.querySelectorAll("[data-copy='app-title']").forEach((node) => { node.textContent = discreet ? "Journal" : "Picon Counter"; });
-  document.querySelectorAll("[data-copy='add-entry']").forEach((node) => { node.textContent = discreet ? "Entrée" : "Picon"; });
-  document.querySelectorAll("[data-copy='formats-title']").forEach((node) => { node.textContent = discreet ? "Formats" : "Formats Picon"; });
-  document.querySelectorAll("[data-aria-copy='app-title']").forEach((node) => { node.setAttribute("aria-label", discreet ? "Journal" : "Picon Counter"); });
-  refs.privacyNote.textContent = "Données conservées uniquement dans le stockage local de ce navigateur : rien n’est envoyé à un serveur.";
-}
-
 function entryNoun(count = 1) {
-  const discreet = Boolean(state.settings?.discreetMode);
-  if (discreet) return { counter: count > 1 ? "entrées" : "entrée", log: `entrée${count > 1 ? "s" : ""}`, short: "entrée" };
   return { counter: count > 1 ? "Picons" : "Picon", log: `Picon-bière${count > 1 ? "s" : ""}`, short: "Picon" };
 }
 
