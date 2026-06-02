@@ -1,4 +1,4 @@
-const CACHE_NAME = "picon-counter-v5";
+const CACHE_NAME = "picon-counter-v6";
 const ASSETS = [
   "./",
   "index.html",
@@ -13,6 +13,7 @@ const ASSETS = [
   "assets/illustrations/threshold-reached.svg",
   "assets/illustrations/discreet-mode.svg",
   "assets/icons/context-tags.svg",
+  "assets/patterns/art-nouveau-bg.svg",
 ];
 
 self.addEventListener("install", (event) => {
