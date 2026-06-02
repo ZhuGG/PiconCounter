@@ -1,7 +1,7 @@
 {
   "name": "Picon Counter",
   "short_name": "Picon",
-  "description": "Compteur personnel offline pour Picon-bière.",
+  "description": "Journal personnel offline, local et indicatif de verres standard.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
