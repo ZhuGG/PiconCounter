@@ -1,0 +1,57 @@
+/* Visual tuning for the Art Nouveau PNG background.
+   Goal: visible, readable, static, decorative only. */
+:root {
+  --panel: rgba(28, 18, 11, 0.9);
+  --panel-strong: rgba(55, 34, 19, 0.92);
+}
+
+body::before {
+  background: var(--ornament-image) center top / min(1120px, 112vw) auto no-repeat !important;
+  background-attachment: scroll !important;
+  background-blend-mode: normal !important;
+  mask-image: none !important;
+  opacity: 0.42 !important;
+  filter: brightness(0.72) contrast(0.96) saturate(0.9) !important;
+  animation: none !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+body::after {
+  opacity: 0.22 !important;
+}
+
+.hero {
+  background:
+    linear-gradient(135deg, rgba(13, 9, 5, 0.64), rgba(13, 9, 5, 0.48)),
+    linear-gradient(135deg, rgba(255, 248, 232, 0.08), rgba(255, 248, 232, 0.02)),
+    rgba(18, 11, 8, 0.88) !important;
+  backdrop-filter: blur(14px) saturate(0.9) !important;
+}
+
+.hero::after,
+.week-aura,
+.orbit,
+.side-line,
+.stage-arch {
+  opacity: 0.28 !important;
+}
+
+.status-band,
+.panel,
+.tabs {
+  background-color: rgba(18, 11, 8, 0.87) !important;
+  backdrop-filter: blur(14px) saturate(0.88) !important;
+}
+
+.glass-stage {
+  isolation: isolate;
+}
+
+@media (max-width: 720px) {
+  body::before {
+    background-position: center top !important;
+    background-size: 118vw auto !important;
+    opacity: 0.36 !important;
+  }
+}
