@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Picon Counter — aperçu</title>
+  <desc id="desc">Image de partage pour une PWA de suivi local des verres standard.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d0905"/>
+      <stop offset="0.55" stop-color="#211407"/>
+      <stop offset="1" stop-color="#381a08"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9cf7d1"/>
+      <stop offset="0.46" stop-color="#ffe59a"/>
+      <stop offset="1" stop-color="#f28b22"/>
+    </linearGradient>
+    <filter id="blur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="30"/></filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="204" cy="138" r="112" fill="#75d59d" opacity=".16" filter="url(#blur)"/>
+  <circle cx="1026" cy="150" r="146" fill="#f6ce72" opacity=".15" filter="url(#blur)"/>
+  <circle cx="890" cy="520" r="188" fill="#d06a50" opacity=".11" filter="url(#blur)"/>
+  <rect x="72" y="74" width="1056" height="482" rx="54" fill="#fff8e7" opacity=".07" stroke="#f6ce72" stroke-opacity=".22"/>
+  <g transform="translate(118 150)">
+    <rect width="178" height="178" rx="46" fill="url(#mark)"/>
+    <path d="M54 44h82l-13 104H67z" fill="#120b08" opacity=".34"/>
+    <path d="M66 92h58l-7 50H73z" fill="#120b08" opacity=".58"/>
+    <path d="M58 44h72" stroke="#fff8e7" stroke-width="16" stroke-linecap="round" opacity=".88"/>
+    <path d="M73 150a45 45 0 0 0 66-21" fill="none" stroke="#fff8e7" stroke-width="10" stroke-linecap="round" opacity=".72"/>
+  </g>
+  <text x="344" y="228" fill="#fff8e7" font-family="Trebuchet MS, Arial, sans-serif" font-size="82" font-weight="900" letter-spacing="-4">Picon Counter</text>
+  <text x="350" y="294" fill="#e1c18d" font-family="Trebuchet MS, Arial, sans-serif" font-size="34" font-weight="800">Journal local de verres standard</text>
+  <path d="M354 334h392" stroke="#f6ce72" stroke-opacity=".42" stroke-width="6" stroke-linecap="round"/>
+  <path d="M768 334h118" stroke="#75d59d" stroke-opacity=".62" stroke-width="6" stroke-linecap="round"/>
+  <g transform="translate(344 384)">
+    <rect width="196" height="74" rx="28" fill="#fff8e7" opacity=".1" stroke="#f6ce72" stroke-opacity=".25"/>
+    <text x="98" y="48" text-anchor="middle" fill="#fff8e7" font-family="Trebuchet MS, Arial, sans-serif" font-size="23" font-weight="900">offline</text>
+  </g>
+  <g transform="translate(562 384)">
+    <rect width="236" height="74" rx="28" fill="#fff8e7" opacity=".1" stroke="#75d59d" stroke-opacity=".24"/>
+    <text x="118" y="48" text-anchor="middle" fill="#fff8e7" font-family="Trebuchet MS, Arial, sans-serif" font-size="23" font-weight="900">données locales</text>
+  </g>
+  <g transform="translate(820 384)">
+    <rect width="210" height="74" rx="28" fill="#fff8e7" opacity=".1" stroke="#f6ce72" stroke-opacity=".25"/>
+    <text x="105" y="48" text-anchor="middle" fill="#fff8e7" font-family="Trebuchet MS, Arial, sans-serif" font-size="23" font-weight="900">sans tracking</text>
+  </g>
+</svg>
