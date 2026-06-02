@@ -4,6 +4,7 @@ const STANDARD_GRAMS = 10;
 const DAILY_LIMIT = 2;
 const WEEKLY_LIMIT = 10;
 const DRY_DAYS_TARGET = 2;
+const PERSONAL_WEEKLY_GOAL_MAX = 50;
 const SCHEMA_VERSION = 2;
 const CONTEXT_TAGS = ["apéro", "repas", "fête", "stress", "solitude", "fatigue", "pression sociale", "envie réelle", "autre"];
 const PRESET_DISPLAY_NAMES = {
@@ -103,6 +104,7 @@ const refs = {
   editId: $("#editId"),
   editKind: $("#editKind"),
   editKindLabel: $("#editKindLabel"),
+  editTitle: $("#editTitle"),
   editDate: $("#editDate"),
   editTime: $("#editTime"),
   editPreset: $("#editPreset"),
@@ -148,9 +150,11 @@ function bindEvents() {
   $("#exportButton").addEventListener("click", exportData);
   $("#importInput").addEventListener("change", importData);
   $("#resetButton").addEventListener("click", resetAll);
-  refs.goalMode.addEventListener("change", updateSettingsFromForm);
-  refs.weeklyGoal.addEventListener("input", updateSettingsFromForm);
-  refs.dryDaysGoal.addEventListener("input", updateSettingsFromForm);
+  refs.goalMode.addEventListener("change", () => updateSettingsFromForm({ sync: true }));
+  refs.weeklyGoal.addEventListener("input", () => updateSettingsFromForm({ sync: false }));
+  refs.weeklyGoal.addEventListener("change", () => updateSettingsFromForm({ sync: true }));
+  refs.dryDaysGoal.addEventListener("input", () => updateSettingsFromForm({ sync: false }));
+  refs.dryDaysGoal.addEventListener("change", () => updateSettingsFromForm({ sync: true }));
   refs.reloadButton.addEventListener("click", () => {
     navigator.serviceWorker.getRegistration().then((registration) => {
       if (registration?.waiting) registration.waiting.postMessage({ type: "SKIP_WAITING" });
@@ -441,9 +445,9 @@ function render() {
   refs.dailyMeterLabel.textContent = `${formatNumber(today.standardDrinks)} / ${DAILY_LIMIT}`;
   refs.weeklyMeterLabel.textContent = `${formatNumber(week.standardDrinks)} / ${getWeeklyGoal()}`;
 
-  const weeklyFill = week.standardDrinks === 0 ? 0 : clamp((week.standardDrinks / WEEKLY_LIMIT) * 86 + 10, 10, 96);
-  document.documentElement.style.setProperty("--fill", `${weeklyFill}%`);
-  refs.animatedGlass.classList.toggle("has-liquid", week.standardDrinks > 0);
+  const dailyFill = today.count === 0 ? 0 : clamp((today.standardDrinks / DAILY_LIMIT) * 86 + 10, 10, 96);
+  document.documentElement.style.setProperty("--fill", `${dailyFill}%`);
+  refs.animatedGlass.classList.toggle("has-liquid", today.count > 0);
 
   renderStatus(today, week);
   renderRhythm(today);
@@ -1030,9 +1034,15 @@ function normalizeSettings(settings = {}) {
   const goalMode = ["observe", "reduce", "pause"].includes(settings.goalMode) ? settings.goalMode : base.goalMode;
   return {
     goalMode,
-    weeklyGoal: clamp(Number(settings.weeklyGoal ?? base.weeklyGoal) || base.weeklyGoal, 0.5, WEEKLY_LIMIT),
-    dryDaysGoal: Math.round(clamp(Number(settings.dryDaysGoal ?? base.dryDaysGoal) || base.dryDaysGoal, 0, 7)),
+    weeklyGoal: normalizeNumberSetting(settings.weeklyGoal, base.weeklyGoal, 0.5, PERSONAL_WEEKLY_GOAL_MAX),
+    dryDaysGoal: Math.round(normalizeNumberSetting(settings.dryDaysGoal, base.dryDaysGoal, 0, 7)),
   };
+}
+
+function normalizeNumberSetting(value, fallback, min, max) {
+  const number = Number(String(value ?? "").replace(",", "."));
+  if (!Number.isFinite(number)) return fallback;
+  return clamp(number, min, max);
 }
 
 function buildTagControls() {
@@ -1070,13 +1080,15 @@ function syncSettingsForm() {
   refs.dryDaysGoal.value = state.settings.dryDaysGoal;
 }
 
-function updateSettingsFromForm() {
-  state.settings = normalizeSettings({
+function updateSettingsFromForm({ sync = false } = {}) {
+  const previousSettings = normalizeSettings(state.settings);
+  const nextSettings = {
     goalMode: refs.goalMode.value,
-    weeklyGoal: refs.weeklyGoal.value,
-    dryDaysGoal: refs.dryDaysGoal.value,
-  });
-  syncSettingsForm();
+    weeklyGoal: refs.weeklyGoal.value.trim() === "" ? previousSettings.weeklyGoal : refs.weeklyGoal.value,
+    dryDaysGoal: refs.dryDaysGoal.value.trim() === "" ? previousSettings.dryDaysGoal : refs.dryDaysGoal.value,
+  };
+  state.settings = normalizeSettings(nextSettings);
+  if (sync) syncSettingsForm();
   saveState();
   render();
 }
