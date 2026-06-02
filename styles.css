@@ -2,8 +2,8 @@
   color-scheme: dark;
   --bg: #0d0905;
   --bg-2: #211407;
-  --panel: rgba(45, 29, 13, 0.56);
-  --panel-strong: rgba(83, 51, 19, 0.64);
+  --panel: rgba(28, 18, 11, 0.9);
+  --panel-strong: rgba(55, 34, 19, 0.92);
   --text: #fff8e7;
   --muted: #e1c18d;
   --line: rgba(247, 211, 137, 0.28);
@@ -55,16 +55,15 @@ body::after {
 
 body::before {
   background:
-    linear-gradient(rgba(13, 9, 5, 0.08), rgba(13, 9, 5, 0.48)),
-    var(--ornament-image) center top / min(1120px, 116vw) auto no-repeat,
-    radial-gradient(ellipse at 50% -16%, transparent 0 39%, rgba(246, 206, 114, 0.11) 40% 40.6%, transparent 41.2%),
-    radial-gradient(ellipse at 50% -10%, transparent 0 52%, rgba(117, 213, 157, 0.08) 53% 53.7%, transparent 54.4%),
-    repeating-linear-gradient(90deg, rgba(246, 206, 114, 0.03) 0 1px, transparent 1px 92px),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.014) 0 1px, transparent 1px 92px);
-  background-blend-mode: normal, screen, normal, normal, normal, normal;
-  mask-image: linear-gradient(to bottom, black, transparent 92%);
-  opacity: 1;
-  animation: loungeDrift 18s linear infinite;
+    radial-gradient(ellipse at center, rgba(13, 9, 5, 0.94) 0 30%, rgba(13, 9, 5, 0.82) 60%, rgba(13, 9, 5, 0.92) 100%),
+    linear-gradient(to bottom, rgba(13, 9, 5, 0.72), rgba(13, 9, 5, 0.96)),
+    var(--ornament-image) center top / min(1120px, 112vw) auto no-repeat;
+  background-attachment: scroll;
+  background-blend-mode: normal, normal, normal;
+  opacity: 0.55;
+  animation: none;
+  transform: none;
+  will-change: auto;
 }
 
 body::after {
@@ -75,7 +74,7 @@ body::after {
     repeating-linear-gradient(90deg, rgba(255, 211, 106, 0.16) 0 1px, transparent 1px 70px);
   transform: perspective(520px) rotateX(62deg);
   transform-origin: bottom;
-  opacity: 0.75;
+  opacity: 0.32;
 }
 
 button,
@@ -962,7 +961,6 @@ body.threshold-reached {
     radial-gradient(circle at 72% 70%, rgba(214, 75, 85, 0.3), transparent 28rem),
     linear-gradient(145deg, #0d0905 0%, #211407 34%, #4a140d 100%);
 }
-body.threshold-reached::before { animation-duration: calc(13s - var(--over-limit) * 5s); }
 body.threshold-burst::after { animation: floorFlash 1.2s ease-out; }
 
 .hero {
@@ -1178,7 +1176,6 @@ body.threshold-burst::after { animation: floorFlash 1.2s ease-out; }
 
 
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes loungeDrift { to { transform: translate3d(-92px, 0, 0); } }
 @keyframes numberPulse { 0%, 100% { transform: translateY(0); filter: drop-shadow(0 18px 32px rgba(255, 143, 45, 0.25)); } 50% { transform: translateY(-3px); filter: drop-shadow(0 24px 38px rgba(255, 211, 106, 0.38)); } }
 @keyframes glassHover { 0%, 100% { transform: perspective(760px) rotateX(-5deg) translateY(0); } 50% { transform: perspective(760px) rotateX(-5deg) translateY(-8px); } }
 @keyframes liquidGlow { 0%, 100% { filter: saturate(1); } 50% { filter: saturate(1.25) brightness(1.08); } }
@@ -1434,4 +1431,16 @@ dialog select,
   .pulse-badge::before {
     animation: none !important;
   }
+}
+
+.hero::after,
+.week-aura,
+.orbit,
+.side-line,
+.stage-arch {
+  opacity: 0.32;
+}
+
+.glass-stage {
+  isolation: isolate;
 }
