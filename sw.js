@@ -1,4 +1,4 @@
-const CACHE_NAME = "picon-counter-v6";
+const CACHE_NAME = "picon-counter-v7";
 const ASSETS = [
   "./",
   "index.html",
@@ -7,6 +7,8 @@ const ASSETS = [
   "manifest.webmanifest",
   "icon.svg",
   "manual-tests.js",
+  "assets/brand/icon-1024.png",
+  "assets/brand/art-nouveau-bg.png",
   "assets/brand/logo-horizontal.svg",
   "assets/brand/og-image.svg",
   "assets/illustrations/empty-today.svg",
