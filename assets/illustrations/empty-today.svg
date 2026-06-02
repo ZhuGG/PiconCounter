@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 460" role="img" aria-labelledby="title desc">
+  <title id="title">Journée à zéro</title>
+  <desc id="desc">Illustration calme d'un carnet ouvert avec une jauge à zéro.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#120b08"/>
+      <stop offset="1" stop-color="#2b1608"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff8e7"/>
+      <stop offset="1" stop-color="#e1c18d"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="18"/></filter>
+  </defs>
+  <rect width="720" height="460" rx="48" fill="url(#bg)"/>
+  <circle cx="144" cy="92" r="62" fill="#75d59d" opacity=".16" filter="url(#glow)"/>
+  <circle cx="584" cy="118" r="82" fill="#f6ce72" opacity=".14" filter="url(#glow)"/>
+  <path d="M168 138c62-22 122-18 180 16 62-34 126-38 204-14v214c-74-22-139-18-204 16-62-34-122-38-180-16z" fill="url(#paper)" opacity=".94"/>
+  <path d="M348 154v216" stroke="#6d4a25" stroke-width="5" opacity=".24"/>
+  <path d="M206 190h92M206 228h112M206 266h74" stroke="#6d4a25" stroke-width="10" stroke-linecap="round" opacity=".28"/>
+  <g transform="translate(414 190)">
+    <circle cx="58" cy="58" r="52" fill="none" stroke="#6d4a25" stroke-opacity=".16" stroke-width="14"/>
+    <path d="M58 6a52 52 0 0 1 0 0" fill="none" stroke="#75d59d" stroke-width="14" stroke-linecap="round"/>
+    <text x="58" y="70" text-anchor="middle" fill="#2b1608" font-family="Trebuchet MS, Arial, sans-serif" font-size="42" font-weight="900">0</text>
+  </g>
+  <path d="M242 336c56 18 98 18 150 0" fill="none" stroke="#f6ce72" stroke-width="8" stroke-linecap="round" opacity=".72"/>
+  <text x="360" y="410" text-anchor="middle" fill="#fff8e7" font-family="Trebuchet MS, Arial, sans-serif" font-size="24" font-weight="800">Journée à zéro · trace calme</text>
+</svg>
