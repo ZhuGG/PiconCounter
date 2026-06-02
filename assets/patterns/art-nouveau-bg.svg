@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 960" role="img" aria-labelledby="title desc">
+  <title id="title">Motif de fond Art nouveau</title>
+  <desc id="desc">Texture sombre avec arabesques végétales et arches discrètes pour fond d'application.</desc>
+  <defs>
+    <radialGradient id="halo" cx="50%" cy="24%" r="70%">
+      <stop offset="0" stop-color="#f6ce72" stop-opacity="0.18"/>
+      <stop offset="0.42" stop-color="#75d59d" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#0d0905" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grain" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M0 63.5H64M63.5 0V64" stroke="#fff8e7" stroke-opacity="0.025"/>
+      <circle cx="18" cy="22" r="1.1" fill="#fff8e7" opacity="0.055"/>
+      <circle cx="44" cy="40" r="0.9" fill="#f6ce72" opacity="0.055"/>
+      <circle cx="52" cy="14" r="0.7" fill="#75d59d" opacity="0.05"/>
+    </pattern>
+    <style>
+      .line{fill:none;stroke:#f6ce72;stroke-opacity:.16;stroke-width:2.2;stroke-linecap:round}.mint{stroke:#75d59d;stroke-opacity:.12}.thin{stroke-width:1.2;opacity:.82}
+    </style>
+  </defs>
+  <rect width="960" height="960" fill="#0d0905"/>
+  <rect width="960" height="960" fill="url(#halo)"/>
+  <rect width="960" height="960" fill="url(#grain)"/>
+  <g opacity="0.92">
+    <path class="line" d="M120 914C144 738 256 620 480 560c224 60 336 178 360 354"/>
+    <path class="line mint" d="M176 914c28-134 126-232 304-286 178 54 276 152 304 286"/>
+    <path class="line thin" d="M254 914c26-94 100-164 226-206 126 42 200 112 226 206"/>
+    <path class="line" d="M480 128c-82 94-82 182 0 264 82-82 82-170 0-264Z"/>
+    <path class="line mint" d="M480 226c-116 62-190 148-222 258 96-24 170-86 222-184 52 98 126 160 222 184-32-110-106-196-222-258Z"/>
+    <path class="line thin" d="M106 374c94-72 172-84 234-36-90 18-152 68-186 150"/>
+    <path class="line thin" d="M854 374c-94-72-172-84-234-36 90 18 152 68 186 150"/>
+    <path class="line" d="M88 124c96 18 158 76 186 174M872 124c-96 18-158 76-186 174"/>
+    <path class="line mint" d="M146 112c70 40 108 94 116 164M814 112c-70 40-108 94-116 164"/>
+    <path class="line thin" d="M480 392v316"/>
+    <circle cx="480" cy="392" r="10" fill="#f6ce72" opacity="0.2"/>
+    <circle cx="480" cy="226" r="7" fill="#75d59d" opacity="0.18"/>
+  </g>
+</svg>
